@@ -3,9 +3,9 @@
 
 Примеры запросов и ресурсов:
 
-GET task/<id> - получить полное описание задачи с айдишником id.
-GET task/<id>/comment - получить все комментарии для задачи id.
-POST project/<id>/task - добавить новую задачу в проект с айдишником id.
+GET task/_id - получить полное описание задачи с айдишником id.
+GET task/_id/comment - получить все комментарии для задачи id.
+POST project/_id/task - добавить новую задачу в проект с айдишником id.
 
 Ошибки возвращаются через HTTP Response Codes. Стандартные коды:
 
@@ -29,6 +29,81 @@ PUT - запрос на изменение существующего ресур
 DELETE - запрос на удаление ресурса. Используется редко, потому что обычно ресурсы только отмечаются как удаленные, чтобы не нарушать целостности базы данных.
 204 - (OK) No Content
 404 - Not Found
+
+
+Роли и права
+=============
+Каждому юзеру назначается системная роль (с системными правами) и роль на каждом проекте (на разных проектах роль может быть своя).
+
+Системные права:
+* system.access
+* administer - админские права перекрывают все остальные.
+* project.management - управление проектами (создание и удаление)
+* people.management - управление людьми (создание, смена роли, смена пароля)
+
+Права по проекту:
+* tester - тестеры могут менять статус чужой задачи на (reopened или closed);
+* task.management - (создание, удаление и редактирование задач);
+* comment.management - (редактирование и удаление чужих комментариев);
+
+Права, которые есть по умолчанию:
+* создавший задачу (автор) может делать с ней что угодно;
+* создавший коммент, так же может делать с ним все, что можно;
+
+Таким образом PUT task работает только для автора, либо для чувака с task.management. Еще PUT работает для тестера только на смену статуса задачи.
+
+**GET role**
+Возвращает список всех ролей
+<pre>
+Response: {
+    "class": "userRoleList",
+    "items": [
+        {
+            "class": "role",
+            "id": 1,
+            "sysrole": true,
+            "sysname": "admin",
+            "name": "Администратор",
+            "permissions": [
+                "system.access",
+                "administer"
+            ]
+        },
+        ...
+    ]
+}
+</pre>
+
+**POST role**
+_access: administer_
+Создаёт новую роль
+<pre>
+Request: {
+  sysname,
+  sysrole
+}
+Response: {
+  “id” : 100
+}
+</pre>
+
+**PUT role/_id**
+_access: administer_
+Изменение роли
+<pre>
+request: {
+    "name": "someone",
+    "permissions": "[\"system.access\",\"people.management\"]"
+}
+</pre>
+Поля:
+permissions
+name
+
+**DELETE role/_id**
+_access: administer_
+Удаляет роль. Для всех пользователь, имеющих данную роль, значение роли устанавливается пустым.
+
 
 
 Юзеры
@@ -215,7 +290,7 @@ tagcolor
 **GET task/_id/oldnote**
 Возвращает бинарник комментариев для задачи.
 
-**GET task/<id>/oldcalendar**
+**GET task/_id/oldcalendar**
 Возвращает бинарник календаря для задачи.
 
 **GET task?from&count**
@@ -227,7 +302,7 @@ Response:
     "from" :
     "to" :
     "items" : [
-       // Таски как в GET/task/<id>.
+       // Таски как в GET/task/_id.
     ]
 }
 </pre>
@@ -245,23 +320,20 @@ Response:
 Возвращает любые задачи для данного юзера, у которых расположение на календаре попадает в рамки (dayfrom; dayto)
 
 **GET task/_id**
-<pre>
 Response  (_task_object):
+<pre>
 {
-    "project"  : айдишник проекта к которому относится таск. ~projid
+    "project"  : "", //айдишник проекта к которому относится таск. ~projid
     "type"     : "task, milestone, folder, issue, feature, testcase" (ENUM)
     "title"    : "My super task."
     "priority" : (TINYINT)
-    "status"   : "open, inprogress, finished, reopened, closed, canceled" (ENUM)
-
+    "status"   : "open, inprogress, finished, reopened, closed, canceled" // (ENUM)
     "assignee" : юзер, которому назначена задача. ~uid
-
     "parentTask" : айдишник родительской задачи или 0
     "sub-tasks" : [
         { "id" : 1000 },
         { "id" : 1001 }
         ]
-
     "attachments" : [
           {
               "url" : 1000,
@@ -273,9 +345,7 @@ Response  (_task_object):
     "startDate" : Unix timestamp
     "duration"  : целое число дней
     "deadline"  : Unix timestamp (date)
-
     "rootComment"
-
     "created" : Unix Timestamp
     "createdby"
 }
@@ -314,6 +384,25 @@ _access: administer, task.management_
 Ответ: 204? No Content
 Удалять можно только задачи верхнего уровня (не имеющие дочек)
 TODO: очистка таймшитов и комментов
+
+Микротаски
+=============
+**PUT microtask/_id**
+{
+    “state” : “open|finished|canceled”
+    “text” : “string”
+}
+
+Вложения
+=============
+Вложения это отдельные файлы, которые прицепляются к задаче.
+
+**POST task/<id>/attachment?filename&size**
+_access: administer, task.management, assignee_
+Body: бинарные данные (тут надо подумать а чо делать если файл большой - сколько вообще в посте передать можно?)
+
+настройка сервера
+php_value post_max_size 20M
 
 
 Комментарии
@@ -354,6 +443,45 @@ _access: administer, comment.management, owner_
 Поля:
 text
 
+Таймшит (работа над задачей)
+=============
+
+Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
+
+**GET task/_id/timesheet**
+<pre>
+Response: [
+    { “day” : 15275, “worker” : 22, “worktimeSeconds” : 3600 },
+    { “day” : 15276, “worker” : 22, “worktimeSeconds” : 3600 },
+]
+</pre>
+
+Для рабочих дней сделано исключение и они создаются не POST’ом а простым PUT’ом - это как бы модификация свойств задачи.
+
+**GET user/_id/timesheet?day=15275**
+<pre>
+Response: {
+“totalWorktimeSeconds” : 7200,
+“items” : [
+    { “task” : 123, “worktimeSeconds” : 3600 },
+    { “task” : 124, “worktimeSeconds” : 3600 }
+    ]
+}
+</pre>
+Возвращает таймшит указанного юзера на указанный день по всем задачам над которыми он работал.
+
+**PUT task/_id/timesheet?day=15275**
+_access: administer, task.management, assignee_
+Body: {
+  “worker” : 22 (опционально)
+  “worktimeSeconds” : “1000”
+}
+Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management
+
+Если у юзера нет прав task.management, то worker не должен указываться, т.к. автоматически подразумевается assignee задачи.
+
+Запись удаляется если worktimeSeconds = нулю.
+
 
 Календари
 =============
@@ -377,7 +505,7 @@ Body: {
   "kind" : "workday|dayoff"
 }
 
-**PUT user/<id>/calendar**
+**PUT user/_id/calendar**
 _access: administer, people.management_
 Запрос на создание исключения из календаря юзера.
 
@@ -391,3 +519,16 @@ Body: {
 **DELETE user/_id/calendar?day=15275**
 access: administer, people.management
 Запрос на удаление исключения из календаря юзера.
+
+
+Конвертер
+=============
+
+**GET converter/project**
+конвертирует таблицу project в project_todo
+
+**GET converter/task**
+конвертирует таблицу task в todo_task
+
+**GET converter/user**
+конвертирует таблицу user в todo_user
