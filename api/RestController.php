@@ -68,7 +68,7 @@ abstract class RestController {
 
     public function checkAuth()
     {
-        //return true;
+        return true;
 
         $auth_token = $this->request['params']['auth_token'];
         if ( !isset( $auth_token ) )
@@ -129,23 +129,27 @@ abstract class RestController {
         return mysql_real_escape_string($val);
     }
 
+    protected function getRequestParamValue( $name, $expected = true )
+    {
+        $val = $this->request['params'][$name];
+
+        if ( !isset( $val ) )
+        {
+            if ( $expected )
+                throw new Exception("Bad Request: param var '{$name}' is empty", 400);
+            else
+                return null;
+        }
+
+        return mysql_real_escape_string($val);
+    }
+
     protected function throwMySQLError()
     {
         throw new Exception( mysql_error(), 500 );
     }
 
-    protected function throwForbidden()
-    {
-        throw new Exception( 'Forbidden', 403 );
-    }
-
-    // @codeCoverageIgnoreStart
-    abstract public function get();
-    abstract public function post();
-    abstract public function put();
-    abstract public function delete();
-    // @codeCoverageIgnoreEnd
-
+    abstract public function routes();
 }
 
 ?>

@@ -2,83 +2,33 @@
 
 class Controllers_task extends RestController
 {
-    ### Возвращает все корневые задачи для проекта
-    public function GetProjectTasks($project_id)
+    public function routes()
     {
-        $items = array();
-        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `project`={$project_id} AND `parentTask`=0" ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
-
-        return $items;
+        return array(
+            'get' => array(
+                'task/search'          => 'SearchTask',
+                'task/(\d+)'           => 'GetTaskById',
+                'task/(\d+)/tasks'     => 'GetTaskChildes',
+                'task/(\d+)/timesheet' => 'GetTaskTimesheet'
+            ),
+            'put' => array(
+                'task/(\d+)'           => 'EditTask',
+                'task/(\d+)/timesheet' => 'EditTaskTimeshit',
+            ),
+            'delete' => array(
+                'task/(\d+)'           => 'DeleteTask'
+            )
+        );
     }
 
-    ### Возвращает все корневые открытые задачи
-    private function GetRootOpenTasks($from, $count)
+    private function _getTaskFromDatabase( $task_id )
     {
-        $items = array();
-        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `parentTask`=0 LIMIT {$from}, {$count}" ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
+        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
 
-        return $items;
-    }
+        if ( $task = mysql_fetch_array( $query ) )
+            return $task;
 
-    private function GetOpenTasksByAssignee($assignee)
-    {
-        $items = array();
-        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `parentTask`=0 AND status <> 'close' AND assignee='{$assigne}'" ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
-
-        return $items;
-    }
-
-    private function GetTasksByAssigneesTimesheet($assignee, $dayfrom, $dayto)
-    {
-        $items = array();
-        $query = "
-            SELECT DISTINCT ts.task, t.*
-            FROM `todo_timesheet` AS ts
-            LEFT JOIN `todo_task` AS t ON (t.id=ts.task)
-            WHERE worker='{$assignee}' AND day BETWEEN {$dayfrom} AND {$dayto}
-        ";
-
-        $query = mysql_query( $query ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
-
-        return $items;
-    }
-
-    function GetTasksByTitle($text)
-    {
-        $text = str_ireplace(" ","%",$text);
-
-        $query = "
-            SELECT *
-            FROM `todo_task`
-            WHERE title LIKE '%{$text}%'
-        ";
-
-        $query = mysql_query( $query ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
-
-        if (empty($items))
-            throw new Exception( 'Not Found', 404 );
-
-        return $items;
+        return null;
     }
 
     ### возвращает инфо о задаче
@@ -143,22 +93,263 @@ class Controllers_task extends RestController
         return $task;
     }
 
-    ## создаёт таск для проекта
+    /*------------------------------------------ ROUTES -------------------------------------------------------------*/
+
+    public function GetTaskById()
+    {
+        $task_id = $this->getResourceNamePart( 1 );
+
+        $db_task = $this->_getTaskFromDatabase( $task_id );
+
+        if ( !isset( $db_task ) )
+            throw new Exception( 'Not Found', 404 );
+
+        $this->response = $this->createTaskFromDatabaseObject($db_task);
+        $this->responseStatus = 200;
+
+        return;
+    }
+
+    public function SearchTask()
+    {
+        $title     = getRequestParamValue('title');
+        $assignee  = getRequestParamValue('assignee');
+        $timesheet = getRequestParamValue('timesheet');
+        $from      = intval(getRequestParamValue('from'));
+        $count     = intval(getRequestParamValue('count'));
+
+        if (!$from) $from = 0;
+        if (!$count) $count = 100;
+
+
+        if (!$title && !$assignee && !$timesheet && !$from)
+        {
+            $this->response = array();
+            $this->responseStatus = 200;
+
+            return;
+        }
+
+        $this->response = $this->GetTasksByTitle($text);
+        $this->response = $this->GetOpenTasksByAssignee($assignee);
+        $this->response = $this->GetTasksByAssigneesTimesheet($assignee, $dayfrom, $dayto);
+        $this->response = $this->GetRootOpenTasks($from, $count);
+
+        $this->responseStatus = 200;
+        break;
+    }
+
+    public function DeleteTask()
+    {
+        $task_id = intval($this->getResourceNamePart( 1 ));
+
+        $query = mysql_query( "SELECT project FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+        $task  = mysql_fetch_array($query);
+
+        if (empty($task))
+            throw new Exception( 'Not Found', 404 );
+
+       /* if ( !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
+            $this->throwForbidden();*/
+
+        $query  = mysql_query("SELECT * FROM `todo_task` WHERE parentTask='{$task_id}' LIMIT 0,1");
+
+        if ( mysql_num_rows( $query ) > 0 )
+        {
+            $this->response = array('status' => 101, 'message' => 'Task has childes');
+            $this->responseStatus = 200;
+        }
+
+        mysql_query("DELETE FROM `todo_task` WHERE id='{$task_id}'");
+
+        ##!!!!!!!!!!!!!!!!!! TODO: timesheet clean
+        ##!!!!!!!!!!!!!!!!!! TODO: comment clean
+
+        $this->response = array('status' => 0);
+        $this->responseStatus = 200;
+
+        return;
+    }
+
+    public function EditTask()
+    {
+        $task_id = intval($this->getResourceNamePart( 1 ));
+
+        $query = mysql_query( "SELECT project, assignee FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+        $task  = mysql_fetch_array($query);
+
+        if (empty($task))
+            throw new Exception( 'Not Found', 404 );
+
+        /*if (
+        !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] )
+        && !$this->loggedUser->hasProjectPermission( User::PERMISSION_TESTER, $task['project'] )
+        && $this->loggedUser->getId() != $task['assignee']
+        )
+            $this->throwForbidden();*/
+
+        /*if ($this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
+            $editable_columns = array(
+                'project'    => 'project',
+                'startDate'  => 'startDate',
+                'duration'   => 'duration',
+                'estimatedEffortSeconds' => 'estimateSeconds',
+                'type'       => 'type',
+                'title'      => 'title',
+                'priority'   => 'priority',
+                'status'     => 'status',
+                'assignee'   => 'assignee',
+                'parentTask' => 'parentTask',
+                'deadline'   => 'deadline'
+            );
+        else
+            $editable_columns = array(
+                'status'     => 'status'
+            );*/
+
+        /*$sets = $this->GetEditablesFromBody($editable_columns);
+        $sets[] = 'modified=NOW()';
+        $sets[] = "modifiedby='".$this->loggedUser->getId()."'";
+        $sets = implode(',', $sets);*/
+
+        /**/mysql_query( "UPDATE `todo_task` SET {$sets} WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+
+        $this->response = array("status" => 0);
+        $this->responseStatus = 202; // accepted
+        break;
+    }
+
+    public function GetTaskTimesheet()
+    {
+        $task_id = intval($this->getResourceNamePart( 1 ));
+
+        $controllers_timesheet = new Controllers_timesheet($this->request);
+        $sheets = $controllers_timesheet->_getTaskTimesheets($task_id, 0);
+
+        $this->response = $sheets;
+        $this->responseStatus = 200;
+    }
+
+    public function EditTaskTimeshit()
+    {
+        ## task/<id>/timesheet?day=15275
+        $task_id = intval($this->getResourceNamePart( 1 ));
+
+        $query = mysql_query( "SELECT project, assignee FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+        $task  = mysql_fetch_array($query, MYSQL_ASSOC);
+
+        if (empty($task))
+            throw new Exception( 'Not Found', 404 );
+
+        /* Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management
+        Если у юзера нет прав task.management, то worker не должен указываться, т.к. автоматически подразумевается assignee задачи. */
+        /*if (
+        !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] )
+        && $this->loggedUser->getId() != $task['assignee']
+        )
+            $this->throwForbidden();*/
+
+        /*$worker = 0;
+        if ( $this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
+            $worker  = $this->getRequestBodyValue('worker', false);*/
+
+        if (!$worker)
+            $worker = $this->loggedUser->getId();
+
+        $controllers_timesheet = new Controllers_timesheet($this->request);
+        $sheets = $controllers_timesheet->saveTimesheetRow($task_id, $worker);
+
+        $this->response = array("status" => 0);
+        $this->responseStatus = 202; // accepted
+    }
+
+    /*-------------------------------------------------------------------------------------------------------*/
+
+    ### Возвращает все корневые задачи для проекта
+    public function GetProjectTasks($project_id)
+    {
+        $items = array();
+        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `project`={$project_id} AND `parentTask`=0" ) or $this->throwMySQLError();
+        while( $dbtask = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
+        }
+
+        return $items;
+    }
+
+    ### Возвращает все корневые открытые задачи
+    private function GetRootOpenTasks($from, $count)
+    {
+        $items = array();
+        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `parentTask`=0 LIMIT {$from}, {$count}" ) or $this->throwMySQLError();
+        while( $dbtask = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
+        }
+
+        return $items;
+    }
+
+    private function GetOpenTasksByAssignee($assignee)
+    {
+        $items = array();
+        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `parentTask`=0 AND status <> 'close' AND assignee='{$assigne}'" ) or $this->throwMySQLError();
+        while( $dbtask = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
+        }
+
+        return $items;
+    }
+
+    private function GetTasksByAssigneesTimesheet($assignee, $dayfrom, $dayto)
+    {
+        $items = array();
+        $query = "
+            SELECT DISTINCT ts.task, t.*
+            FROM `todo_timesheet` AS ts
+            LEFT JOIN `todo_task` AS t ON (t.id=ts.task)
+            WHERE worker='{$assignee}' AND day BETWEEN {$dayfrom} AND {$dayto}
+        ";
+
+        $query = mysql_query( $query ) or $this->throwMySQLError();
+        while( $dbtask = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
+        }
+
+        return $items;
+    }
+
+   public  function GetTasksByTitle($text)
+    {
+        $text = str_ireplace(" ","%",$text);
+
+        $query = "
+            SELECT *
+            FROM `todo_task`
+            WHERE title LIKE '%{$text}%'
+        ";
+
+        $query = mysql_query( $query ) or $this->throwMySQLError();
+        while( $dbtask = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
+        }
+
+        if (empty($items))
+            throw new Exception( 'Not Found', 404 );
+
+        return $items;
+    }
+
+     ## создаёт таск для проекта
     public function createTaskInDatabase($data)
     {
         $this->insertArrayIntoDatabase('todo_task', $data);
         $id = mysql_insert_id();
         return $id;
-    }
-
-    private function _getTaskFromDatabase( $task_id )
-    {
-        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
-
-        if ( $task = mysql_fetch_array( $query ) )
-            return $task;
-
-        return array();
     }
 
     public function checkTaskExists($task_id = 0)
@@ -168,7 +359,7 @@ class Controllers_task extends RestController
             throw new Exception( 'Not Found', 404 );
     }
 
-    public function get()
+   /* public function get()
     {
         switch ( $this->getResourceNamePartsCount() )
         {
@@ -195,182 +386,10 @@ class Controllers_task extends RestController
                     echo $task['calendar']; exit;
                     $this->responseStatus = 200;
                 }
-                ## task/<id>/oldcalendar [GET]: temporary function
-                if ( $this->getResourceNamePart( 2 ) == 'oldcalendar' )
-                {
-                    $task_id = $this->getResourceNamePart( 1 );
-
-                    $query = mysql_query( "SELECT calendar FROM `task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
-                    $task = mysql_fetch_array( $query );
-                    echo $task['calendar']; exit;
-                    $this->responseStatus = 200;
-                }
-                // task/<id>/timesheet [GET]: Returns task timesheet.
-                else if ($this->getResourceNamePart( 2 ) == 'timesheet')
-                {
-                    $task_id = $this->getResourceNamePart( 1 );
-
-                    $controllers_timesheet = new Controllers_timesheet($this->request);
-                    $sheets = $controllers_timesheet->_getTaskTimesheets($task_id, 0);
-
-                    $this->response = $sheets;
-                    $this->responseStatus = 200;
-                }
-                break;
-            ## task/<id> [GET]: Returns full task description.
-            case 2:
-                $task_id = $this->getResourceNamePart( 1 );
-
-                $db_task = $this->_getTaskFromDatabase( $task_id );
-
-                if ( !isset( $db_task ) )
-                    throw new Exception( 'Not Found', 404 );
-
-                $this->response = $this->createTaskFromDatabaseObject($db_task);
-                $this->responseStatus = 200;
-                break;
-            ## task?from&count [GET]
-            case 1:
-                $search  = $_GET['search'];
-
-                if ($search)
-                {
-                    switch ($search)
-                    {
-                        case 'title':
-                            $text = mysql_real_escape_string($_GET['text']);
-
-                            if (!$text)
-                                throw new Exception( 'Bad Request', 400 );
-
-                            $this->response = $this->GetTasksByTitle($text);
-                            $this->responseStatus = 200;
-                            break;
-                        case 'assignee': ## возвращает задачи для данного юзера, кроме закрытых (closed)
-                            $assignee = intval($_GET['assignee']);
-
-                            if (!$assignee)
-                                throw new Exception( 'Bad Request', 400 );
-
-                            $this->response = $this->GetOpenTasksByAssignee($assignee);
-                            $this->responseStatus = 200;
-                            break;
-                        case 'timesheet':
-                            $assignee = intval($_GET['assignee']);
-                            $dayfrom  = intval($_GET['dayfrom']);
-                            $dayto    = intval($_GET['dayto']);
-
-                            if (!$dayfrom || !$dayto || !$assignee)
-                                throw new Exception( 'Bad Request', 400 );
-
-                            $this->response = $this->GetTasksByAssigneesTimesheet($assignee, $dayfrom, $dayto);
-                            $this->responseStatus = 200;
-                            break;
-                    }
-                    break;
-                }
-                else
-                {
-                    $from  = intval($_GET['from']);
-                    $count = intval($_GET['count']);
-
-                    if (!$count)
-                        $count = 100;
-
-                    $this->response = $this->GetRootOpenTasks($from, $count);
-                    $this->responseStatus = 200;
-                    break;
-                }
         }
 
         return null;
-    }
-
-    public function put()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            case 3:
-                ## task/<id>/timesheet?day=15275
-                $task_id = intval($this->getResourceNamePart( 1 ));
-
-                $query = mysql_query( "SELECT project, assignee FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
-                $task  = mysql_fetch_array($query, MYSQL_ASSOC);
-
-                if (empty($task))
-                    throw new Exception( 'Not Found', 404 );
-
-                /* Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management
-                Если у юзера нет прав task.management, то worker не должен указываться, т.к. автоматически подразумевается assignee задачи. */
-                if (
-                !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] )
-                && $this->loggedUser->getId() != $task['assignee']
-                )
-                    $this->throwForbidden();
-
-                $worker = 0;
-                if ( $this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
-                    $worker  = $this->getRequestBodyValue('worker', false);
-
-                if (!$worker)
-                    $worker = $this->loggedUser->getId();
-
-                $controllers_timesheet = new Controllers_timesheet($this->request);
-                $sheets = $controllers_timesheet->saveTimesheetRow($task_id, $worker);
-
-                $this->response       = 'ok';
-                $this->responseStatus = 202; // accepted
-                break;
-            ## task/<id> [PUT]: Изменить свойства существующей задачи.
-            case 2:
-                $task_id = intval($this->getResourceNamePart( 1 ));
-
-                $query = mysql_query( "SELECT project, assignee FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
-                $task  = mysql_fetch_array($query);
-
-                if (empty($task))
-                    throw new Exception( 'Not Found', 404 );
-
-                if (
-                !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] )
-                && !$this->loggedUser->hasProjectPermission( User::PERMISSION_TESTER, $task['project'] )
-                && $this->loggedUser->getId() != $task['assignee']
-                )
-                    $this->throwForbidden();
-
-                if ($this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
-                    $editable_columns = array(
-                        'project'    => 'project',
-                        'startDate'  => 'startDate',
-                        'duration'   => 'duration',
-                        'estimatedEffortSeconds' => 'estimateSeconds',
-                        'type'       => 'type',
-                        'title'      => 'title',
-                        'priority'   => 'priority',
-                        'status'     => 'status',
-                        'assignee'   => 'assignee',
-                        'parentTask' => 'parentTask',
-                        'deadline'   => 'deadline'
-                    );
-                else
-                    $editable_columns = array(
-                        'status'     => 'status'
-                    );
-
-                $sets = $this->GetEditablesFromBody($editable_columns);
-                $sets[] = 'modified=NOW()';
-                $sets[] = "modifiedby='".$this->loggedUser->getId()."'";
-                $sets = implode(',', $sets);
-
-                mysql_query( "UPDATE `todo_task` SET {$sets} WHERE id='{$task_id}'" ) or $this->throwMySQLError();
-
-                $this->response = 'ok'; // accepted
-                $this->responseStatus = 202; // accepted
-                break;
-        }
-
-        return null;
-    }
+    }*/
 
     public function post() {
         switch ( $this->getResourceNamePartsCount() )
@@ -448,37 +467,6 @@ class Controllers_task extends RestController
         }
         return null;
 
-    }
-
-    public function delete()
-    {
-        ## task/<id> [DELETE]
-        $task_id = intval($this->getResourceNamePart( 1 ));
-
-        $query = mysql_query( "SELECT project FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
-        $task  = mysql_fetch_array($query);
-
-        if (empty($task))
-            throw new Exception( 'Not Found', 404 );
-
-        if ( !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
-            $this->throwForbidden();
-
-        $query  = mysql_query("SELECT * FROM `todo_task` WHERE parentTask='{$task_id}' LIMIT 0,1");
-        $dbtask = mysql_fetch_array( $query );
-
-        if (!empty($dbtask))
-            return null;
-
-        mysql_query("DELETE FROM `todo_task` WHERE id='{$task_id}'");
-
-        ##!!!!!!!!!!!!!!!!!! TODO: timesheet clean
-        ##!!!!!!!!!!!!!!!!!! TODO: comment clean
-
-        $this->response = 'ok';
-        $this->responseStatus = 200;
-
-        return null;
     }
 }
 

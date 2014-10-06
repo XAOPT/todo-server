@@ -28,26 +28,20 @@ class Rest {
 
     const DEFAULT_RESPONSE_FORMAT = 'json'; // Default response format
 
-    /**
-     * Constructor
-     * calls processRequest internally
-     */
     public function __construct() {
         $this->processRequest();
     }
 
-    /**
-     * Function processing raw HTTP request headers & body
-     * and populates them to class variables.
-     */
-    private function processRequest() {
-        $resource = (isset($_GET['RESTurl']) && !empty($_GET['RESTurl'])) ? $_GET['RESTurl'] : 'index';
-        unset($_GET['RESTurl']);
+    private function processRequest()
+    {
+        $resource = parse_url($_SERVER['REQUEST_URI']);
 
-        $this->request['resource'] = explode( '/', $resource );
+        $this->request['route']    = trim($resource['path'], '/');
+        $this->request['resource'] = explode( '/', $this->request['route'] );
         $this->request['method']   = strtolower($_SERVER['REQUEST_METHOD']);
         $this->request['headers']  = $this->getHeaders();
-        $this->request['format']   = isset($_GET['format']) ? trim($_GET['format']) : null;
+        $this->request['format']   = isset($_REQUEST['format']) ? trim($_REQUEST['format']) : null;
+
         switch($this->request['method']) {
             case 'get':
                 $this->request['params'] = $_GET;
@@ -74,25 +68,12 @@ class Rest {
             }
         }
         array_walk_recursive($this->request, 'trim_value');
+
+        $this->process();
     }
 
-    protected function writeRequestLog($userid = 0)
+    public function process()
     {
-        if (in_array($this->request['method'], array('post', 'put', 'delete')))
-            mysql_query("INSERT INTO `todo_log` (user_id, method, request_uri, body) VALUES ('{$userid}', '{$this->request['method']}', '{$_SERVER['REQUEST_URI']}', '{$this->request['body']}')") or $this->throwMySQLError();
-    }
-
-    protected function throwMySQLError()
-    {
-        throw new Exception( mysql_error(), 500 );
-    }
-
-    /**
-     * Function to resolve controller based on the resource name and http
-     * method (GET/POST/PUT/DELETE) using reflection and get the response.
-     * Passes the response to the response helpers class.
-     */
-    public function process() {
         try {
             $controllerName = $this->getController();
 
@@ -104,29 +85,43 @@ class Rest {
             if(!$controller->isInstantiable()) {
                 throw new Exception('Bad Request', 400);
             }
-            try {
-                $method = $controller->getMethod($this->request['method']);
-            } catch(ReflectionException $re) {
-                throw new Exception('Unsupported HTTP method ' . $this->request['method'], 405);
+
+            $controller_object = $controller->newInstance($this->request);
+
+            $user_id = $controller_object->checkAuth();
+
+            if (!$user_id) {
+                throw new Exception('Unauthorized', 401);
             }
-            if(!$method->isStatic()) {
-                $controller = $controller->newInstance($this->request);
 
-                $user_id = $controller->checkAuth();
-
-                if(!$user_id) {
-                    throw new Exception('Unauthorized', 401);
-                }
-                $method->invoke($controller);
-                $this->response = $controller->getResponse();
-                $this->responseStatus = $controller->getResponseStatus();
-
-                $this->writeRequestLog($user_id);
-            } else {
-                throw new Exception('Static methods not supported in Controllers', 500);
-            }
-            if(is_null($this->response)) {
+            $routes = $controller_object->routes();
+            if (!isset($routes[$this->request['method']]))
+            {
                 throw new Exception('Method not allowed', 405);
+            }
+            else
+            {
+                foreach ($routes[$this->request['method']] as $regex => $func_name)
+                {
+                    $regex = preg_replace('/\//','\/',$regex);
+                    if (preg_match('/^'.$regex.'$/', $this->request['route']))
+                    {
+                        $method = $controller->getMethod($func_name);
+                    }
+                }
+            }
+
+            if (!isset($method))
+                throw new Exception('Route not found', 500);
+
+            $method->invoke($controller_object);
+            $this->response = $controller_object->getResponse();
+            $this->responseStatus = $controller_object->getResponseStatus();
+
+            $this->writeRequestLog($user_id);
+
+            if(is_null($this->response)) {
+                throw new Exception('Answer is empty', 405);
             }
         } catch (Exception $re) {
             $this->responseStatus = $re->getCode();
@@ -142,51 +137,11 @@ class Rest {
      */
     private function getController() {
         $expected = $this->request['resource'][0];
-        foreach(glob(APPLICATION_PATH . '/Controllers/*.php', GLOB_NOSORT) as $controller) {
-            $controller = basename($controller, '.php');
-            if(strnatcasecmp($expected, $controller) == 0) {
-                return 'Controllers_' . $controller;
-                /*  */
-            }
-        }
-        return null;
-    }
 
-    private function xmlHelper($data, $version = '1.0', $encoding = 'UTF-8')
-    {
-        $xml = new XMLWriter;
-        $xml->openMemory();
-        $xml->startDocument($version, $encoding);
-
-        if(!function_exists('write')) {
-            function write(XMLWriter $xml, $data, $old_key = null) {
-                foreach($data as $key => $value){
-                    if(is_array($value)){
-                        if(!is_int($key)) {
-                            $xml->startElement($key);
-                        }
-                        write($xml, $value, $key);
-                        if(!is_int($key)) {
-                            $xml->endElement();
-                        }
-                        continue;
-                    }
-                    // Special handling for integer keys in array
-                    $key = (is_int($key)) ? $old_key.$key : $key;
-                    $xml->writeElement($key, $value);
-                }
-            }
-        }
-        write($xml, $data);
-        return $xml->outputMemory(true);
-    }
-
-    /**
-     * Function implementing xml response helper.
-     * Converts response array to xml response.
-     */
-    private function xmlResponse() {
-        return $this->xmlHelper($this->response);
+        if (file_exists(APPLICATION_PATH . '/Controllers/'.$expected.'.php'))
+            return 'Controllers_' . $expected;
+        else
+            return null;
     }
 
     /**
@@ -289,7 +244,7 @@ class Rest {
         return (isset(self::$codes[$status])) ? self::$codes[$status] : self::$codes[500];
     }
 
-    private static $formats = array('xml', 'json', 'qs');
+    private static $formats = array('json', 'qs');
 
     /**
      * Function returns response format from allowed list
@@ -300,7 +255,6 @@ class Rest {
     }
 
     private static $contentTypes = array(
-        'xml'  => 'application/xml',
         'json' => 'application/json',
         'qs'   => 'text/plain'
     );
@@ -321,6 +275,28 @@ class Rest {
         header($headers);
         header('Content-Type: ' . $contentType);
         echo $body;
+    }
+
+    protected function throwMySQLError($method = '', $query = '')
+    {
+        if ($method && $query)
+        {
+            file_put_contents('throwMySQLError.log', "[".date('Y-m-d H:i:s')." {$method}] {$query}\n", FILE_APPEND);
+            file_put_contents('throwMySQLError.log', mysql_errno() . ": " . mysql_error() . "\n", FILE_APPEND);
+        }
+        else
+        {
+            file_put_contents('debug_backtrace.log', mysql_errno() . ": " . mysql_error() . "\n", FILE_APPEND);
+            file_put_contents('debug_backtrace.log', print_r(debug_backtrace(), true), FILE_APPEND);
+        }
+
+        throw new Exception( DEVMODE ? mysql_error() : "DB error", 500 );
+    }
+
+    protected function writeRequestLog($userid = 0)
+    {
+        if (in_array($this->request['method'], array('post', 'put', 'delete')))
+            mysql_query("INSERT INTO `todo_log` (user_id, method, request_uri, body) VALUES ('{$userid}', '{$this->request['method']}', '{$_SERVER['REQUEST_URI']}', '{$this->request['body']}')") or $this->throwMySQLError();
     }
 }
 

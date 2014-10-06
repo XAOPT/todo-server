@@ -1,0 +1,11 @@
+{
+    "param": {
+        "title" : "string",
+        "shorttitle" : "string",
+        "tagcolor" : "string"
+    },
+    "edit": {
+        "admin": ["*"],
+        "forbidden": []
+    }
+}
