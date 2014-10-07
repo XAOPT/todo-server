@@ -213,7 +213,7 @@ Body: Бинарные данные картинки с аватаркой.
 Возвращает список всех проектов  
 ``` json
 Response: {
-  "class" : "projectList"
+  "status" : 0
   "items" : [
     {}, // _project_object 
     {} // _project_object
@@ -224,15 +224,18 @@ Response: {
 **GET project/\d+**  
 Возвращает описание проекта  
 ``` json
-Response (_project_object):
+Response:
 {
-  "class" : "project",
-  "id" : 1,
-  "archived" : false,
-  "title" : "",
-  "shorttitle" : "",
-  "tagcolor"   : "",
-  "created"    : "" // created_unix
+    "status" : 0,
+    "item" : {
+    "class" : "project",
+    "id" : 1,
+    "archived" : false,
+    "title" : "",
+    "shorttitle" : "",
+    "tagcolor"   : "",
+    "created"    : "" // created_unix
+  }
 }
 ```
 
@@ -241,12 +244,14 @@ _access: administer, project.management_
 Добавить новый проект
 ``` json
 Request: {
-  "title": ""
+  "title": "",
+  "shorttitle" : ""
 }
 ```
 ``` json
 Response: {
-  "id" : 100
+  "status" : 0,
+  "id" : 0
 }
 ```
 
@@ -254,12 +259,17 @@ Response: {
 access: administer, project.management  
 Редактирование проекта
 ``` json
-{
+Request: {
   "title" : "",
   "shorttitle" : "",
   "tagcolor" : ""
 ```
-
+``` json
+Response: {
+  "status" : 0,
+  "id" : 0
+}
+```
 
 Задачи
 =============
@@ -279,34 +289,42 @@ timesheet_to
 project
 priority
 ```
-Response item (_task_object):  
+Response:  
 ``` json
 {
-    "project"  : "", //айдишник проекта к которому относится таск. ~projid
-    "type"     : "task, milestone, folder, issue, feature, testcase",  // (ENUM)
-    "title"    : "My super task.",
-    "priority" : 0, // (TINYINT)
-    "status"   : "open, inprogress, finished, reopened, closed, canceled", // (ENUM)
-    "assignee" : 10, // юзер, которому назначена задача. ~uid
-    "parentTask" : 10, // айдишник родительской задачи или 0
-    "sub-tasks" : [
-        { "id" : 1000 },
-        { "id" : 1001 }
-    ],
-    "attachments" : [
-          {
-              "url" : 1000,
-              "filename" : 1000,
-              "size" : 1000,
-          }
-    ],
-    "estimatedEffortSeconds" : 3600,
-    "startDate" : 0, // Unix timestamp
-    "duration"  : 0, // целое число дней
-    "deadline"  : 0, // Unix timestamp (date)
-    "rootComment": 0, //
-    "created" : 0, //Unix Timestamp
-    "createdby" : 0
+  "status": 0,
+  "from" : 0,
+  "count" : 100,
+  "items" : [
+      {
+        "project"  : "", //айдишник проекта к которому относится таск. ~projid
+        "type"     : "task, milestone, folder, issue, feature, testcase",  // (ENUM)
+        "title"    : "My super task.",
+        "priority" : 0, // (TINYINT)
+        "status"   : "open, inprogress, finished, reopened, closed, canceled", // (ENUM)
+        "assignee" : 10, // юзер, которому назначена задача. ~uid
+        "parentTask" : 10, // айдишник родительской задачи или 0
+        "sub-tasks" : [
+            { "id" : 1000 },
+            { "id" : 1001 }
+        ],
+        "attachments" : [
+              {
+                  "url" : 1000,
+                  "filename" : 1000,
+                  "size" : 1000,
+              }
+        ],
+        "estimatedEffortSeconds" : 3600,
+        "startDate" : 0, // Unix timestamp
+        "duration"  : 0, // целое число дней
+        "deadline"  : 0, // Unix timestamp (date)
+        "rootComment": 0, //
+        "created" : 0, //Unix Timestamp
+        "createdby" : 0
+      },
+      ...
+  ]
 }
 ```
 
