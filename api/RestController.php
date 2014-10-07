@@ -11,6 +11,7 @@ abstract class RestController {
     protected $responseStatus;
     protected $jsonbody;
     public    $loggedUser;
+    public    $schema;
 
     public function __construct($request)
     {
@@ -42,7 +43,34 @@ abstract class RestController {
         mysql_query( $query ) or $this->throwMySQLError();
     }
 
-    protected function GetEditablesFromBody($editable_columns)
+    /**
+     * Обновляет строку в таблице $table, определённую условием $where.
+     * @param string $table - имя таблицы
+     * @param string $array - хеш-массив. Ключ элемента - имя столбца. Значение элемента - устанавливаемое значение.
+     * @param string $where - условие выбора строки.
+     */
+    protected function UpdateDatabaseFromArray ($table, $array, $where) {
+        $vars = array();
+
+        foreach ($array AS $k=>$v) {
+            if ($v != 'NOW()')
+                $vars[]="`".$k."`='".$v."'";
+            else
+                $vars[]="`".$k."`=".$v."";
+        }
+
+        if (empty($vars))
+            return false;
+
+        $var = implode(",", $vars);
+
+        $query = "UPDATE ".$table." SET ".$var." WHERE ".$where;
+        if (defined("DB_PREFIX"))
+            $query = preg_replace('/\#\#/', DB_PREFIX, $query);
+        mysql_query( $query ) or $this->throwMySQLError();
+    }
+
+/*    protected function GetEditablesFromBody($editable_columns)
     {
         $sets = array();
 
@@ -56,15 +84,7 @@ abstract class RestController {
         }
 
         return $sets;
-    }
-
-    final public function getResponseStatus() {
-        return $this->responseStatus;
-    }
-
-    final public function getResponse() {
-        return $this->response;
-    }
+    }*/
 
     public function checkAuth()
     {
@@ -147,6 +167,103 @@ abstract class RestController {
     protected function throwMySQLError()
     {
         throw new Exception( mysql_error(), 500 );
+    }
+
+    final public function getResponseStatus() {
+        return $this->responseStatus;
+    }
+
+    final public function getResponse() {
+        return $this->response;
+    }
+
+    protected function setSchema($scope)
+    {
+        if (!file_exists("../schemas/".$scope.".json") || !$scope)
+            throw new Exception("Unknown schema", 400);
+
+        $schema = file_get_contents("../schemas/".$scope.".json");
+        $this->schema = json_decode($schema, true);
+    }
+
+    protected function getSchema($scope)
+    {
+        if (!$scope)
+            $scope = $this->request['controller'];
+
+        if (empty($this->schema))
+            $this->setSchema($scope);
+
+        return $this->schema;
+    }
+
+    protected function normalizeObject($data = array(), $scope = '')
+    {
+        $schema = $this->getSchema($scope);
+
+        $output = array();
+
+        if (count($data))
+        foreach ($data as $key => $value)
+        {
+            if (!isset($schema['param'][$key]))
+                continue;
+
+            switch ($schema['param'][$key])
+            {
+                case "int":
+                    $output[$key] = (int)$value;
+                    break;
+                case "string":
+                    $output[$key] = (string)$value;
+                    break;
+                case "timestamp":
+                    $output[$key] = strtotime($value);
+                    break;
+                 case "bool":
+                    $output[$key] = (bool)$value;
+                    break;
+            }
+        }
+
+        return $output;
+    }
+
+    protected function GetParamsFromRequestBody($action = '', $scope = '')
+    {
+        // получим схему
+        $schema = $this->getSchema($scope);
+
+        if (!$action || !isset($schema[$action]))
+            throw new Exception("GetParamsFromRequestBody issue", 400);
+
+        // если данное действие не разрешает правиь какие-то поля - убираем их
+        $param = $schema['param'];
+
+        if (isset($schema[$action]['forbidden_fields']) && count($schema[$action]['forbidden_fields']))
+        foreach ($schema[$action]['forbidden_fields'] as $key) {
+            unset($param[$key]);
+        }
+
+        // получим взодящие параметры
+        $output = array();
+
+        if (count($param))
+        foreach ($param as $key => $value)
+        {
+            // узнаем из схемы, необходим ли параметр
+            $expected = false;
+            if (isset($schema[$action]['require']) && in_array($key, $schema[$action]['require']))
+                $expected = true;
+
+            $temp = $this->getRequestBodyValue( $key, $expected );
+            if ($temp)
+                $output[$key] = $temp;
+        }
+
+        $output = $this->normalizeObject($output);
+
+        return $output;
     }
 
     abstract public function routes();

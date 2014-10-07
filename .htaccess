@@ -4,11 +4,8 @@ AddDefaultCharset utf-8
 
 	RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-s
-	RewriteRule ^(.*)$ api/index.php?RESTurl=$1 [QSA,NC,L]
-
-	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteRule ^(.*)$ api/index.php [QSA,NC,L]
 
-	RewriteCond %{REQUEST_FILENAME} -s
+	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteRule ^(.*)$ api/index.php [QSA,NC,L]
 </IfModule>

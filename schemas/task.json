@@ -1,5 +1,6 @@
 {
     "param": {
+        "id" : "int",
         "project" : "int",
         "startDate" : "date",
         "duration" : "int",
@@ -16,9 +17,13 @@
         "modified" : "date",
         "modifiedby": "int"
     },
+    "create" : {
+        "require" : ["project", "title"],
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+    },
     "edit": {
-        "owner": ["status"],
+        "owner": ["*"],
         "manager": ["*"],
-        "forbidden": ["created", "createdby"]
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
     }
 }

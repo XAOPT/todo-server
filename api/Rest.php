@@ -75,6 +75,8 @@ class Rest {
     public function process()
     {
         try {
+            $this->request['controller'] = $this->request['resource'][0];
+
             $controllerName = $this->getController();
 
             if(null == $controllerName) {
@@ -136,7 +138,7 @@ class Rest {
      * directory based on resource name request.
      */
     private function getController() {
-        $expected = $this->request['resource'][0];
+        $expected = $this->request['controller'];
 
         if (file_exists(APPLICATION_PATH . '/Controllers/'.$expected.'.php'))
             return 'Controllers_' . $expected;
