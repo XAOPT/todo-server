@@ -264,16 +264,22 @@ access: administer, project.management
 Задачи
 =============
 
-**GET task/\d+/oldnote**  
-Возвращает бинарник комментариев для задачи.  
-_deprecated_
-
-**GET task/\d+/oldcalendar**  
-Возвращает бинарник календаря для задачи.  
-_deprecated_
-
-**GET task/\d+**  
-Response  (_task_object):  
+**GET task**  
+Query params:
+``` json
+id // айди задачи или несколько айди через запятую
+from // с какой позиции вернуть
+count // сколько вернуть
+assignee
+status
+title
+text
+timesheet_from // что-то делалось по таску в диапазоне
+timesheet_to
+project
+priority
+```
+Response item (_task_object):  
 ``` json
 {
     "project"  : "", //айдишник проекта к которому относится таск. ~projid
@@ -304,21 +310,7 @@ Response  (_task_object):
 }
 ```
 
-**GET task/search?from&count&assignee&status&title&text&timesheet_from&timesheet_to&project&priority
-Возвращает массив незавершенных (!!!) корневых (parentTask=0) тасков, незавершенных потому что завершенных очень много. Начиная с индекса from до индекса (from + count - 1) включительно.
-По умолчанию from = 0, count = 100;
-``` json
-Response:
-{
-    "from" : "",
-    "to" : "",
-    "items" : [
-       // Таски как в GET/task/\d+.
-    ]
-}
-```
-
-**POST task/\d+**  
+**POST task**  
 access: administer, task.management  
 Добавить новую задачу в указанный проект  
 ``` json
@@ -360,6 +352,14 @@ status
 _access: administer, task.management_  
 Ответ: 204? No Content  
 Удалять можно только задачи верхнего уровня (не имеющие дочек)  
+
+**[_deprecated_] GET task/\d+/oldnote**  
+Возвращает бинарник комментариев для задачи.  
+_deprecated_
+
+**[_deprecated_] GET task/\d+/oldcalendar**  
+Возвращает бинарник календаря для задачи.  
+
 
 Микротаски
 =============
