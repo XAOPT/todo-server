@@ -3,31 +3,31 @@
 
 Примеры запросов и ресурсов:
 
-GET task/_id - получить полное описание задачи с айдишником id.
-GET task/_id/comment - получить все комментарии для задачи id.
-POST project/_id/task - добавить новую задачу в проект с айдишником id.
+GET task/\d+ - получить полное описание задачи с айдишником id.  
+GET task/\d+/comment - получить все комментарии для задачи id.  
+POST project/\d+/task - добавить новую задачу в проект с айдишником id.
 
 Ошибки возвращаются через HTTP Response Codes. Стандартные коды:
 
-200 - ОК
-400 - Bad Request (если даны неправельные параметры запроса)
-401 - Unauthorized (если не прошли авторизацию)
-403 - Forbidden (если нет нужных разрешений у юзера)
-405 - Invalid Method Call (возвращается автоматически если не реализован метод)
-500 - Internal Server Error (возвращается автоматически, когда есть ошибка PHP)
+200 - ОК  
+400 - Bad Request (если даны неправельные параметры запроса)  
+401 - Unauthorized (если не прошли авторизацию)  
+403 - Forbidden (если нет нужных разрешений у юзера)  
+405 - Invalid Method Call (возвращается автоматически если не реализован метод)  
+500 - Internal Server Error (возвращается автоматически, когда есть ошибка PHP)  
 
-GET - запрос на получение ресурса, обычно параметры передаются в $_GET, возвращает:
-200 - OK и описание ресурса как JSON в ответе.
+GET - запрос на получение ресурса, обычно параметры передаются в $_GET, возвращает:  
+200 - OK и описание ресурса как JSON в ответе.  
 404 - Not Found
 
-POST - запрос для создания нового ресурса. Возвращает:
+POST - запрос для создания нового ресурса. Возвращает:  
 201 - OK (Created) и обычно JSON с айдишником созданного ресурса.
 
-PUT - запрос на изменение существующего ресурса. Все новые данные передаются как JSON в теле запроса. Возвращает:
+PUT - запрос на изменение существующего ресурса. Все новые данные передаются как JSON в теле запроса. Возвращает:  
 200 - OK
 
-DELETE - запрос на удаление ресурса. Используется редко, потому что обычно ресурсы только отмечаются как удаленные, чтобы не нарушать целостности базы данных.
-204 - (OK) No Content
+DELETE - запрос на удаление ресурса. Используется редко, потому что обычно ресурсы только отмечаются как удаленные, чтобы не нарушать целостности базы данных.  
+204 - (OK) No Content  
 404 - Not Found
 
 
@@ -52,10 +52,11 @@ DELETE - запрос на удаление ресурса. Использует
 
 Таким образом PUT task работает только для автора, либо для чувака с task.management. Еще PUT работает для тестера только на смену статуса задачи.
 
-**GET role**
-Возвращает список всех ролей
-<pre>
-Response: {
+**GET role**  
+Возвращает список всех ролей  
+ ``` json
+Response: 
+{
     "class": "userRoleList",
     "items": [
         {
@@ -72,36 +73,36 @@ Response: {
         ...
     ]
 }
-</pre>
+```
 
-**POST role**
-_access: administer_
-Создаёт новую роль
-<pre>
+**POST role**  
+_access: administer_  
+Создаёт новую роль  
+``` json
 Request: {
   sysname,
   sysrole
 }
 Response: {
-  “id” : 100
+  id : 100
 }
-</pre>
+```
 
-**PUT role/_id**
-_access: administer_
-Изменение роли
-<pre>
+**PUT role/\d+**  
+_access: administer_  
+Изменение роли  
+``` json
 request: {
     "name": "someone",
-    "permissions": "[\"system.access\",\"people.management\"]"
+    "permissions": ["system.access","people.management"]
 }
-</pre>
-Поля:
-permissions
+```
+Поля:  
+permissions  
 name
 
-**DELETE role/_id**
-_access: administer_
+**DELETE role/\d+**  
+_access: administer_  
 Удаляет роль. Для всех пользователь, имеющих данную роль, значение роли устанавливается пустым.
 
 
@@ -109,97 +110,97 @@ _access: administer_
 Юзеры
 =============
 
-**GET user**
-Список пользователей
-<pre>
+**GET user**  
+Список пользователей  
+``` json
 {
     from: 0,
     count: 24,
     items: [] // параметры, которые необходимо вернуть. Если отсутствуют - использовать дефолтный набор
 }
-</pre>
+```
 
-**GET user/_id**
+**GET user/\d+**  
 Данные пользователя
 
-**GET user/_id/clientSettings**
+**GET user/\d+/clientSettings**  
 Возвращает настройки клиента пользователя
 
-**GET user/_id/vars**
-Возвращает доп. информацию о пользователе
+**GET user/\d+/vars**  
+Возвращает доп. информацию о пользователе  
 _устарело_
 
-**GET user/_id/avatar**
+**GET user/\d+/avatar**  
 Возвращает ссылку на аватару юзера, чтобы скачать.
-<pre>
+``` json
 {
     "url" : "http://office.divogames.ru/todo/avatars/1.jpg",
 }
-</pre>
+```
 _устарело_
 
-**POST user**
-_access: administer, people.management_
+**POST user**  
+_access: administer, people.management_  
 Создание пользователя
-<pre>
+``` json
 Request:
 {
   username: "",
   email: ""
 }
-</pre>
+```
 
-**PUT user/_id/vars**
-_access: administer, people.management, owner_
-Изменение доп. информации о  пользователе
+**PUT user/\d+/vars**  
+_access: administer, people.management, owner_  
+Изменение доп. информации о  пользователе  
 _устарело_
 
-**PUT user/_id/clientSettings**
-_access: owner_
+**PUT user/\d+/clientSettings**  
+_access: owner_  
 Изменение настроек клиента пользователя
 
-**PUT user/_id/password**
-_access: people.management, user (self)_
+**PUT user/\d+/password**  
+_access: people.management, user (self)_  
 Изменение пароля. Админам менять пароли могут только они сами или другие админы.
-<pre>
+``` json
 Request:
 {
   password: md5(text)
 }
-</pre>
+```
 _устарело_
 
 
-**PUT user/_id**
-_access: administer, people.management_
-Изменение данных пользователя
+**PUT user/\d+**  
+_access: administer, people.management_  
+Изменение данных пользователя  
 people.management не может устанавливать роль "admin", нельзя менять самому себе
 
 Вообще people.management - читерский доступ. Можно нахоботить себе любой доступ кроме админского через фейковый аккаунт, например.
-Поля для менеджера:
-deleted
-username
-role
-def_role
-group
-firstname
-lastname
+Поля для менеджера:  
+deleted  
+username  
+role  
+def_role  
+group  
+firstname  
+lastname  
 
-**PUT user/_id/projectrole**
-_access: administer, people.management_
-Установить проектную роль.
-Если роль пустая - запись удаляется
-<pre>
+**PUT user/\d+/projectrole**  
+_access: administer, people.management_  
+Установить проектную роль.  
+Если роль пустая - запись удаляется  
+``` json
 Request: {
   "project":
   "role":
 }
-</pre>
+```
 
-**POST user/_id/avatar?filename&size**
-_access: owner_
-Загрузить аватарку для юзера.
-filename: исходное имя картинки (по нему можно формат определить)
+**POST user/\d+/avatar?filename&size**  
+_access: owner_  
+Загрузить аватарку для юзера.  
+filename: исходное имя картинки (по нему можно формат определить)  
 size: размер данных в байтах.
 
 Body: Бинарные данные картинки с аватаркой.
@@ -208,9 +209,9 @@ Body: Бинарные данные картинки с аватаркой.
 Проекты
 =============
 
-**GET project**
-Возвращает список всех проектов
-<pre>
+**GET project**  
+Возвращает список всех проектов  
+``` json
 Response: {
   class : 'projectList'
   items : [
@@ -218,11 +219,11 @@ Response: {
     _project_object
   ]
 }
-</pre>
+```
 
-**GET project/_id**
-Возвращает описание проекта
-<pre>
+**GET project/\d+**  
+Возвращает описание проекта  
+``` json
 Response (_project_object):
 {
   class      : 'project',
@@ -233,95 +234,95 @@ Response (_project_object):
   tagcolor   : ~color,
   created    : ~created_unix
 }
-</pre>
+```
 
-**GET project/_id/task**
-Возвращает корневые задачи проекта.
-<pre>
+**GET project/\d+/task**  
+Возвращает корневые задачи проекта.  
+``` json
 Response: {
   [
     _task_object,
     _task_object
   ]
 }
-</pre>
+```
 
-**GET project/_id/tasks?assignee=USER_ID&status=open&priority=1**
+**GET project/\d+/tasks?assignee=USER\d+&status=open&priority=1**  
 Возвращает все задачи проекта для данного юзера.
 
-**POST project**
-_access: administer, project.management_
+**POST project**  
+_access: administer, project.management_  
 Добавить новый проект
-<pre>
+``` json
 Request: {
   title
 }
 Response: {
   "id" : 100
 }
-</pre>
+```
 
-**POST project/_id/task**
-access: administer, task.management
-Добавить новую задачу в указанный проект
-<pre>
+**POST project/\d+/task**  
+access: administer, task.management  
+Добавить новую задачу в указанный проект  
+``` json
 Request: {
   "title"
 }
 Response: {
   "id" : 100
 }
-</pre>
+```
 
-**PUT project/_id**
-access: administer, project.management
+**PUT project/\d+**  
+access: administer, project.management  
 Редактирование проекта
-<pre>
+``` json
 Поля:
 title
 shorttitle
 tagcolor
-</pre>
+```
 
 
 Задачи
 =============
 
-**GET task/_id/oldnote**
+**GET task/\d+/oldnote**  
 Возвращает бинарник комментариев для задачи.
 
-**GET task/_id/oldcalendar**
+**GET task/\d+/oldcalendar**  
 Возвращает бинарник календаря для задачи.
 
-**GET task?from&count**
+**GET task?from&count**  
 Возвращает массив незавершенных (!!!) корневых (parentTask=0) тасков, незавершенных потому что завершенных очень много. Начиная с индекса from до индекса (from + count - 1) включительно.
 По умолчанию from = 0, count = 100;
-<pre>
+``` json
 Response:
 {
     "from" :
     "to" :
     "items" : [
-       // Таски как в GET/task/_id.
+       // Таски как в GET/task/\d+.
     ]
 }
-</pre>
+```
 
-**GET task?assignee=USER_ID&status=STATUS**
+**GET task?assignee=USER\d+&status=STATUS**  
 Возвращает список тасков для конкретного пользователя со статусом STATUS (по умолчанию Open)
 
 **GET task?search=title&text=SOME_TEXT**
-<pre>
+``` json
 Response:
 Задачи с указанным текстом в заголовке
-</pre>
+```
 
-**GET task?search=timesheet&assignee=USER_ID&dayfrom&dayto**
+**GET task?search=timesheet&assignee=USER\d+&dayfrom&dayto**  
 Возвращает любые задачи для данного юзера, у которых расположение на календаре попадает в рамки (dayfrom; dayto)
 
-**GET task/_id**
+**GET task/\d+**
 Response  (_task_object):
-<pre>
+``` json
 {
     "project"  : "", //айдишник проекта к которому относится таск. ~projid
     "type"     : "task, milestone, folder, issue, feature, testcase" (ENUM)
@@ -349,16 +350,16 @@ Response  (_task_object):
     "created" : Unix Timestamp
     "createdby"
 }
-</pre>
+```
 
-**GET task/_id/tasks**
+**GET task/\d+/tasks**  
 Возвращает массив вложенных подзадач.
 
 
-**PUT task/_id**
+**PUT task/\d+**  
 _access: administer, task.management_
 Изменить свойства существующей задачи.
-<pre>
+``` json
 Поля для people.management:
 project
 type
@@ -377,9 +378,9 @@ status
 
 Поля для: access: tester
 status
-</pre>
+```
 
-**DELETE task/_id**
+**DELETE task/\d+**  
 _access: administer, task.management_
 Ответ: 204? No Content
 Удалять можно только задачи верхнего уровня (не имеющие дочек)
@@ -387,7 +388,7 @@ TODO: очистка таймшитов и комментов
 
 Микротаски
 =============
-**PUT microtask/_id**
+**PUT microtask/\d+**
 {
     “state” : “open|finished|canceled”
     “text” : “string”
@@ -397,11 +398,11 @@ TODO: очистка таймшитов и комментов
 =============
 Вложения это отдельные файлы, которые прицепляются к задаче.
 
-**POST task/<id>/attachment?filename&size**
-_access: administer, task.management, assignee_
+**POST task/<id>/attachment?filename&size**  
+_access: administer, task.management, assignee_  
 Body: бинарные данные (тут надо подумать а чо делать если файл большой - сколько вообще в посте передать можно?)
 
-настройка сервера
+настройка сервера  
 php_value post_max_size 20M
 
 
@@ -409,8 +410,8 @@ php_value post_max_size 20M
 =============
 Комментарии пишутся к задачам - для отображения дискуссии. Причем, само описание задачи - это автоматически созданный корневой комментарий, а все последующие комменты вкладываются в него.
 
-**GET task/_id/comments**
-<pre>
+**GET task/\d+/comments**
+``` json
 Response: {
     "id"
     "text"
@@ -420,11 +421,11 @@ Response: {
     "modifiedby"
     "childes": []
 }
-</pre>
+```
 
-**POST task/_id/comment**
+**POST task/\d+/comment**  
 _access: comment.management, assignee, tester_
-<pre>
+``` json
 Request: {
   "text": "",
   "parent": 100,
@@ -432,9 +433,9 @@ Request: {
 Response: {
   "id" : 100,
 }
-</pre>
+```
 
-**PUT comment/_id**
+**PUT comment/\d+**  
 _access: administer, comment.management, owner_
 
 Здесь "text" - это форматированный HTML текст с простейшими тэгами.
@@ -448,18 +449,18 @@ text
 
 Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
 
-**GET task/_id/timesheet**
-<pre>
+**GET task/\d+/timesheet**
+``` json
 Response: [
     { “day” : 15275, “worker” : 22, “worktimeSeconds” : 3600 },
     { “day” : 15276, “worker” : 22, “worktimeSeconds” : 3600 },
 ]
-</pre>
+```
 
 Для рабочих дней сделано исключение и они создаются не POST’ом а простым PUT’ом - это как бы модификация свойств задачи.
 
-**GET user/_id/timesheet?day=15275**
-<pre>
+**GET user/\d+/timesheet?day=15275**
+``` json
 Response: {
 “totalWorktimeSeconds” : 7200,
 “items” : [
@@ -467,10 +468,10 @@ Response: {
     { “task” : 124, “worktimeSeconds” : 3600 }
     ]
 }
-</pre>
+```
 Возвращает таймшит указанного юзера на указанный день по всем задачам над которыми он работал.
 
-**PUT task/_id/timesheet?day=15275**
+**PUT task/\d+/timesheet?day=15275**  
 _access: administer, task.management, assignee_
 Body: {
   “worker” : 22 (опционально)
@@ -487,37 +488,37 @@ Body: {
 =============
 Календарь есть общий для всех сотрудников (где отмечаются праздники и отклонения от дефолтного календаря (каждая суббота и воскресенье - выходной)) и есть персональные календари, где отмечаются отклонения от общего календаря для каждого юзера в отдельности.
 
-**GET calendar?from=15275&count=100**
+**GET calendar?from=15275&count=100**  
 Запрос на получение общего календаря за указанный интервал дат.
-<pre>
+``` json
 Response: [
   { "day" : 15275, "kind" : "workday|dayoff" }
 ]
-</pre>
+```
 
-**GET user/_id/calendar?from=15275&count=100**
+**GET user/\d+/calendar?from=15275&count=100**  
 Получить отличия в календаря юзера от дефолтного календаря.
 
-**PUT calendar?day=15275**
+**PUT calendar?day=15275**  
 access: administer
 Запрос на создание исключения из дефолтного календаря.
 Body: {
   "kind" : "workday|dayoff"
 }
 
-**PUT user/_id/calendar**
-_access: administer, people.management_
+**PUT user/\d+/calendar**  
+_access: administer, people.management_  
 Запрос на создание исключения из календаря юзера.
 
-<pre>
+``` json
 Body: {
   "day" : 15275,
   "kind" : "workday|dayoff"
 }
-</pre>
+```
 
-**DELETE user/_id/calendar?day=15275**
-access: administer, people.management
+**DELETE user/\d+/calendar?day=15275**  
+access: administer, people.management  
 Запрос на удаление исключения из календаря юзера.
 
 
