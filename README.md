@@ -213,10 +213,10 @@ Body: Бинарные данные картинки с аватаркой.
 Возвращает список всех проектов  
 ``` json
 Response: {
-  class : 'projectList'
-  items : [
-    _project_object,
-    _project_object
+  "class" : "projectList"
+  "items" : [
+    {}, // _project_object 
+    {} // _project_object
   ]
 }
 ```
@@ -226,49 +226,25 @@ Response: {
 ``` json
 Response (_project_object):
 {
-  class      : 'project',
-  id
-  archived   : false,
-  title
-  shorttitle : ~abc,
-  tagcolor   : ~color,
-  created    : ~created_unix
+  "class" : "project",
+  "id" : 1,
+  "archived" : false,
+  "title" : "",
+  "shorttitle" : "",
+  "tagcolor"   : "",
+  "created"    : "" // created_unix
 }
 ```
-
-**GET project/\d+/task**  
-Возвращает корневые задачи проекта.  
-``` json
-Response: {
-  [
-    _task_object,
-    _task_object
-  ]
-}
-```
-
-**GET project/\d+/tasks?assignee=USER\d+&status=open&priority=1**  
-Возвращает все задачи проекта для данного юзера.
 
 **POST project**  
 _access: administer, project.management_  
 Добавить новый проект
 ``` json
 Request: {
-  title
-}
-Response: {
-  "id" : 100
+  "title": ""
 }
 ```
-
-**POST project/\d+/task**  
-access: administer, task.management  
-Добавить новую задачу в указанный проект  
 ``` json
-Request: {
-  "title"
-}
 Response: {
   "id" : 100
 }
@@ -278,10 +254,10 @@ Response: {
 access: administer, project.management  
 Редактирование проекта
 ``` json
-Поля:
-title
-shorttitle
-tagcolor
+{
+  "title" : "",
+  "shorttitle" : "",
+  "tagcolor" : ""
 ```
 
 
@@ -289,78 +265,78 @@ tagcolor
 =============
 
 **GET task/\d+/oldnote**  
-Возвращает бинарник комментариев для задачи.
+Возвращает бинарник комментариев для задачи.  
+_deprecated_
 
 **GET task/\d+/oldcalendar**  
-Возвращает бинарник календаря для задачи.
+Возвращает бинарник календаря для задачи.  
+_deprecated_
 
-**GET task?from&count**  
-Возвращает массив незавершенных (!!!) корневых (parentTask=0) тасков, незавершенных потому что завершенных очень много. Начиная с индекса from до индекса (from + count - 1) включительно.
-По умолчанию from = 0, count = 100;
-``` json
-Response:
-{
-    "from" :
-    "to" :
-    "items" : [
-       // Таски как в GET/task/\d+.
-    ]
-}
-```
-
-**GET task?assignee=USER\d+&status=STATUS**  
-Возвращает список тасков для конкретного пользователя со статусом STATUS (по умолчанию Open)
-
-**GET task?search=title&text=SOME_TEXT**
-``` json
-Response:
-Задачи с указанным текстом в заголовке
-```
-
-**GET task?search=timesheet&assignee=USER\d+&dayfrom&dayto**  
-Возвращает любые задачи для данного юзера, у которых расположение на календаре попадает в рамки (dayfrom; dayto)
-
-**GET task/\d+**
-Response  (_task_object):
+**GET task/\d+**  
+Response  (_task_object):  
 ``` json
 {
     "project"  : "", //айдишник проекта к которому относится таск. ~projid
-    "type"     : "task, milestone, folder, issue, feature, testcase" (ENUM)
-    "title"    : "My super task."
-    "priority" : (TINYINT)
-    "status"   : "open, inprogress, finished, reopened, closed, canceled" // (ENUM)
-    "assignee" : юзер, которому назначена задача. ~uid
-    "parentTask" : айдишник родительской задачи или 0
+    "type"     : "task, milestone, folder, issue, feature, testcase",  // (ENUM)
+    "title"    : "My super task.",
+    "priority" : 0, // (TINYINT)
+    "status"   : "open, inprogress, finished, reopened, closed, canceled", // (ENUM)
+    "assignee" : 10, // юзер, которому назначена задача. ~uid
+    "parentTask" : 10, // айдишник родительской задачи или 0
     "sub-tasks" : [
         { "id" : 1000 },
         { "id" : 1001 }
-        ]
+    ],
     "attachments" : [
           {
               "url" : 1000,
               "filename" : 1000,
               "size" : 1000,
           }
-        ]
-    "estimatedEffortSeconds" : 3600
-    "startDate" : Unix timestamp
-    "duration"  : целое число дней
-    "deadline"  : Unix timestamp (date)
-    "rootComment"
-    "created" : Unix Timestamp
-    "createdby"
+    ],
+    "estimatedEffortSeconds" : 3600,
+    "startDate" : 0, // Unix timestamp
+    "duration"  : 0, // целое число дней
+    "deadline"  : 0, // Unix timestamp (date)
+    "rootComment": 0, //
+    "created" : 0, //Unix Timestamp
+    "createdby" : 0
 }
 ```
 
-**GET task/\d+/tasks**  
-Возвращает массив вложенных подзадач.
+**GET task/search?from&count&assignee&status&title&text&timesheet_from&timesheet_to&project&priority
+Возвращает массив незавершенных (!!!) корневых (parentTask=0) тасков, незавершенных потому что завершенных очень много. Начиная с индекса from до индекса (from + count - 1) включительно.
+По умолчанию from = 0, count = 100;
+``` json
+Response:
+{
+    "from" : "",
+    "to" : "",
+    "items" : [
+       // Таски как в GET/task/\d+.
+    ]
+}
+```
 
+**POST task/\d+**  
+access: administer, task.management  
+Добавить новую задачу в указанный проект  
+``` json
+Request: {
+  "title": ""
+}
+```
+``` json
+Response: {
+  "id" : 100
+}
+```
 
 **PUT task/\d+**  
 _access: administer, task.management_
 Изменить свойства существующей задачи.
 ``` json
-Поля для people.management:
+// Поля для people.management:
 project
 type
 title
@@ -373,18 +349,17 @@ startDate
 duration
 estimatedEffortSeconds
 
-Поля для assignee:
+// Поля для assignee:
 status
 
-Поля для: access: tester
+// Поля для: access: tester
 status
 ```
 
 **DELETE task/\d+**  
-_access: administer, task.management_
-Ответ: 204? No Content
-Удалять можно только задачи верхнего уровня (не имеющие дочек)
-TODO: очистка таймшитов и комментов
+_access: administer, task.management_  
+Ответ: 204? No Content  
+Удалять можно только задачи верхнего уровня (не имеющие дочек)  
 
 Микротаски
 =============
