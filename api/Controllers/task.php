@@ -28,38 +28,6 @@ class Controllers_task extends RestController
             throw new Exception( 'Not Found', 404 );
     }
 
-    ### возвращает инфо о задаче
-    public static function createTaskFromDatabaseObject( $dbobj )
-    {
-        if ( !isset( $dbobj ) )
-            return null;
-
-        $taskid = (int)$dbobj['id'];
-
-        $task = array(
-            'id'          => $taskid,
-            'project'     => (int)$dbobj['project'],
-            'type'        => (string)$dbobj['type'],
-            'title'       => (string)$dbobj['title'],
-            'priority'    => (int)$dbobj['priority'],
-            'status'      => (string)$dbobj['status'],
-            'assignee'    => (int)$dbobj['assignee'],
-            'parentTask'  => (int)$dbobj['parentTask'],
-
-            'estimatedEffortSeconds' => intval($dbobj['estimateSeconds']),
-            'startDate'   => strtotime($dbobj['startDate']),
-            'duration'    => intval($dbobj['duration']),
-            'deadline'    => strtotime($dbobj['deadline']),
-
-            'created'     => strtotime($dbobj['created']),
-            'createdby'   => $dbobj['createdby'],
-            'modified'    => strtotime($dbobj['modified']),
-            'modifiedby'  => $dbobj['modifiedby'],
-        );
-
-        return $task;
-    }
-
     public function GetTasks()
     {
         $id        = intval($this->getRequestParamValue('id', false));
