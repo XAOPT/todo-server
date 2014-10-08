@@ -113,31 +113,12 @@ _access: administer_
 **GET user**  
 Список пользователей  
 ``` json
-{
-    from: 0,
-    count: 24,
-    items: [] // параметры, которые необходимо вернуть. Если отсутствуют - использовать дефолтный набор
+Response: {
+    "from": 0,
+    "count": 24,
+    "items": []
 }
 ```
-
-**GET user/\d+**  
-Данные пользователя
-
-**GET user/\d+/clientSettings**  
-Возвращает настройки клиента пользователя
-
-**GET user/\d+/vars**  
-Возвращает доп. информацию о пользователе  
-_устарело_
-
-**GET user/\d+/avatar**  
-Возвращает ссылку на аватару юзера, чтобы скачать.
-``` json
-{
-    "url" : "http://office.divogames.ru/todo/avatars/1.jpg",
-}
-```
-_устарело_
 
 **POST user**  
 _access: administer, people.management_  
@@ -145,31 +126,12 @@ _access: administer, people.management_
 ``` json
 Request:
 {
-  username: "",
-  email: ""
+  "firstname": "",
+  "lastname": "",
+  "role": "",
+  "email": ""
 }
 ```
-
-**PUT user/\d+/vars**  
-_access: administer, people.management, owner_  
-Изменение доп. информации о  пользователе  
-_устарело_
-
-**PUT user/\d+/clientSettings**  
-_access: owner_  
-Изменение настроек клиента пользователя
-
-**PUT user/\d+/password**  
-_access: people.management, user (self)_  
-Изменение пароля. Админам менять пароли могут только они сами или другие админы.
-``` json
-Request:
-{
-  password: md5(text)
-}
-```
-_устарело_
-
 
 **PUT user/\d+**  
 _access: administer, people.management_  
@@ -177,14 +139,11 @@ _access: administer, people.management_
 people.management не может устанавливать роль "admin", нельзя менять самому себе
 
 Вообще people.management - читерский доступ. Можно нахоботить себе любой доступ кроме админского через фейковый аккаунт, например.
-Поля для менеджера:  
+Поля для менеджера: 
+email
+firstname
+lastname
 deleted  
-username  
-role  
-def_role  
-group  
-firstname  
-lastname  
 
 **PUT user/\d+/projectrole**  
 _access: administer, people.management_  
@@ -196,15 +155,6 @@ Request: {
   "role":
 }
 ```
-
-**POST user/\d+/avatar?filename&size**  
-_access: owner_  
-Загрузить аватарку для юзера.  
-filename: исходное имя картинки (по нему можно формат определить)  
-size: размер данных в байтах.
-
-Body: Бинарные данные картинки с аватаркой.
-
 
 Проекты
 =============
