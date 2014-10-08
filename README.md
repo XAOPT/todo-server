@@ -431,38 +431,37 @@ Body: {
 =============
 Календарь есть общий для всех сотрудников (где отмечаются праздники и отклонения от дефолтного календаря (каждая суббота и воскресенье - выходной)) и есть персональные календари, где отмечаются отклонения от общего календаря для каждого юзера в отдельности.
 
-**GET calendar?from=15275&count=100**  
+**GET calendar?from=15275&count=100&userid**  
 Запрос на получение общего календаря за указанный интервал дат.
 ``` json
-Response: [
-  { "day" : 15275, "kind" : "workday|dayoff" }
-]
+Response: { 
+  "status" : 0, 
+  "from" : 0,
+  "count" : 100,
+  "items" : [
+    {
+      "day": 15232,
+      "userid": 0
+      "kind": "dayoff"
+    }
+  ]
+}
 ```
 
-**GET user/\d+/calendar?from=15275&count=100**  
-Получить отличия в календаря юзера от дефолтного календаря.
-
-**PUT calendar?day=15275**  
-access: administer
-Запрос на создание исключения из дефолтного календаря.
-Body: {
-  "kind" : "workday|dayoff"
-}
-
-**PUT user/\d+/calendar**  
-_access: administer, people.management_  
-Запрос на создание исключения из календаря юзера.
-
+**PUT calendar**  
+access: administer  
+Запрос на создание исключения из дефолтного календаря (userid не обязателен). 
 ``` json
-Body: {
-  "day" : 15275,
+Request: {
+  "day": 15222,
+  "userid": 0,
   "kind" : "workday|dayoff"
 }
 ```
 
-**DELETE user/\d+/calendar?day=15275**  
+**DELETE calendar?day=15275&userid**  
 access: administer, people.management  
-Запрос на удаление исключения из календаря юзера.
+Запрос на удаление исключения из общего календаря или из календаря юзера (если задан userid).
 
 
 Конвертер
