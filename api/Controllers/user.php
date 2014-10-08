@@ -155,15 +155,6 @@ class Controllers_user extends RestController
                     $this->response = $sheets;
                     $this->responseStatus = 200;
                 }
-                else if ( $this->getResourceNamePart( 2 ) == 'calendar' )
-                {
-                    $worker = $this->getResourceNamePart( 1 );
-
-                    $calendar_controller = new Controllers_calendar($this->request);
-
-                    $this->response = $calendar_controller->GetCalendarByUser($worker);
-                    $this->responseStatus = 200;
-                }
         }
 
         return null;
@@ -194,23 +185,6 @@ class Controllers_user extends RestController
 
                     $this->response       = 'ok';
                     $this->responseStatus = 202;
-                }
-
-                ## user/<id>/calendar?day=15275
-                if ( $this->getResourceNamePart( 2 ) == 'calendar' )
-                {
-                    if (
-                    !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )
-                    && !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT )
-                    )
-                        $this->throwForbidden();
-
-                    $worker = intval($this->getResourceNamePart( 1 ));
-
-                    $calendar_controller = new Controllers_calendar($this->request);
-
-                    $this->response = $calendar_controller->PutCalendarRow($worker);
-                    $this->responseStatus = 200;
                 }
         }
 
