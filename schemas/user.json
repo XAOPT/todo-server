@@ -1,0 +1,29 @@
+{
+    "param": {
+        "id" : "int",
+        "email" : "string",
+        "role" : "string",
+        "firstname" : "string",
+        "lastname" : "string",
+        "vars" : "string",
+        "clientSettings" : "string",
+        "created" : "timestamp",
+        "createdby" : "int",
+        "lastaccess" : "timestamp",
+        "deleted" : "bool"
+    },
+    "create" : {
+        "admin" : ["*"],
+        "require" : ["firstname", "lastname", "role", "email"],
+        "forbidden_fields" : ["id", "vars", "clientSettings", "created", "createdby", "lastaccess", "deleted"]
+    },
+    "edit": {
+        "admin" : ["email", "role", "firstname", "lastname", "vars", "clientSettings","deleted"],
+        "manager" : ["email", "firstname", "lastname", "vars", "clientSettings","deleted"],
+        "owner" : ["email", "password", "firstname", "lastname", "vars", "clientSettings"]
+    },
+    "edit_password": {
+        "admin" : ["password"],
+        "owner" : ["password"]
+    }
+}

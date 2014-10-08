@@ -2,16 +2,123 @@
 
 class Controllers_user extends RestController
 {
-    public static function getUserFromDatabase( $id )
+    public function routes()
+    {
+        return array(
+            'get' => array(
+                'user' => 'GetUsers'
+            ),
+            'post' => array(
+                'user' => 'CreateUser'
+            ),
+            'put' => array(
+                'user/\d+'   => 'EditUser'
+            )
+        );
+    }
+
+    public function checkUserExists($user_id = 0)
+    {
+        $result = mysql_query( "SELECT * FROM `todo_user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
+        if (!mysql_num_rows($result))
+            throw new Exception( 'Not Found', 404 );
+    }
+
+    public function GetUsers()
+    {
+        $id        = intval($this->getRequestParamValue('id', false));
+
+        $from      = intval($this->getRequestParamValue('from', false));
+        $count     = intval($this->getRequestParamValue('count', false));
+
+        if (!$from) $from = 0;
+        if (!$count) $count = 100;
+
+        $where = array();
+
+        if ($id) {
+            $where[] = "`id`={$id}";
+        }
+
+        if (empty($where))
+            $where[] = "1=1";
+
+        $where = implode(" AND ", $where);
+
+        $items = array();
+        $query = mysql_query("SELECT * FROM `todo_user` WHERE {$where} LIMIT {$from}, {$count}") or $this->throwMySQLError();
+
+        while( $obj = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->normalizeObject( $obj );
+        }
+
+        $this->response = array(
+            "status" => 0,
+            "from" => $from,
+            "count" => $count,
+            "items" => $items
+        );
+        $this->responseStatus = 200;
+    }
+
+    public function CreateUser()
+    {
+        ## user [POST]: Creates new user.
+        /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
+            $this->throwForbidden();*/
+
+        $data = $this->GetParamsFromRequestBody('create');
+
+        $this->insertArrayIntoDatabase('todo_user', $data);
+        $id = mysql_insert_id();
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
+        );
+        $this->responseStatus = 201;
+    }
+
+    public function EditUser()
+    {
+        ## user/<id> [PUT]: Modifies the specified user.
+        /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ))
+            $this->throwForbidden();*/
+
+        $user_id = $this->getResourceNamePart( 1 );
+
+        $this->checkUserExists($user_id);
+
+        /*$role = $this->getRequestBodyValue( 'role', false );
+
+        if ($role == 'admin' && !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ))
+            $this->throwForbidden();*/
+
+        $data = $this->GetParamsFromRequestBody('edit');
+
+        $this->UpdateDatabaseFromArray('todo_user', $data, "id='{$user_id}'");
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $user_id
+        );
+
+        $this->responseStatus = 202; // accepted
+    }
+
+    /* ------------------------------------------------------ */
+
+    /*public static function getUserFromDatabase( $id )
     {
         $query = mysql_query( "SELECT * FROM `todo_user` WHERE `id`=$id" ) or $this->throwMySQLError();
         if ( $object = mysql_fetch_array( $query ) )
             return $object;
 
         throw new Exception( 'Not Found', 404 );
-    }
+    }*/
 
-    public static function createUserFromDatabaseObject( $dbobj )
+    /*public static function createUserFromDatabaseObject( $dbobj )
     {
         if ( !isset( $dbobj ) || empty($dbobj) )
             throw new Exception( 'Not Found', 404 );
@@ -29,14 +136,14 @@ class Controllers_user extends RestController
             );
 
         return $user;
-    }
+    }*/
 
-    public function get()
+    /*public function get()
     {
         switch ( $this->getResourceNamePartsCount() )
         {
             case 3:
-                ## user/<id>/timesheet?day=<day> [GET]: Возвращает таймшит указанного юзера на указанный день по всем задачам над которыми он работал.
+                ## user/<id>/timesheet?day=<day> [GET]:
                 if ( $this->getResourceNamePart( 2 ) == 'timesheet' )
                 {
                     $day    = intval($_GET['day']);
@@ -48,7 +155,6 @@ class Controllers_user extends RestController
                     $this->response = $sheets;
                     $this->responseStatus = 200;
                 }
-                ## user/<id>/calendar?from=15275&count=100 [GET] Получить отличия в календаре юзера от дефолтного календаря.
                 else if ( $this->getResourceNamePart( 2 ) == 'calendar' )
                 {
                     $worker = $this->getResourceNamePart( 1 );
@@ -58,85 +164,12 @@ class Controllers_user extends RestController
                     $this->response = $calendar_controller->GetCalendarByUser($worker);
                     $this->responseStatus = 200;
                 }
-                ## user/<id>/clientSettings [GET]: получаем клиентские настройки пользователя
-                ## user/<id>/vars [GET]:           получаем доп. инфо о пользователе
-                else if ( $this->getResourceNamePart( 2 ) == 'clientSettings' ||  $this->getResourceNamePart( 2 ) == 'vars')
-                {
-                    $user_id = $this->getResourceNamePart( 1 );
-
-                    $query = mysql_query( "SELECT ".$this->getResourceNamePart( 2 )." FROM `todo_user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-                    $temp  = mysql_fetch_array($query, MYSQL_NUM);
-
-                    if (empty($temp))
-                        throw new Exception( 'Not Found', 404 );
-
-                    $this->response       = $temp[0];
-                    $this->responseStatus = 200;
-                }
-                break;
-            case 2:
-                ## user/<id> [GET]: Returns full user info.
-                $user_id = $this->getResourceNamePart( 1 );
-
-                $query = mysql_query( "SELECT * FROM `todo_user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-                $db_user = mysql_fetch_array( $query );
-
-                $this->response       = $this->createUserFromDatabaseObject( $db_user );
-                $this->responseStatus = 200;
-                break;
-            case 1:
-                ## user [GET]: Returns all users.
-                $users = array( 'class' => 'userList' );
-
-                $items = array();
-                $query = mysql_query( "SELECT * FROM `todo_user`" ) or $this->throwMySQLError();
-                while( $db_user = mysql_fetch_array( $query ) )
-                {
-                    $user = $this->createUserFromDatabaseObject( $db_user );
-                    if ( $user != null )
-                        $items[] = $user;
-                }
-
-                $users['items'] = $items;
-
-                $this->response = $users;
-                $this->responseStatus = 200;
-                break;
         }
 
         return null;
-    }
+    }*/
 
-    public function post()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            ## user [POST]: Creates new user.
-            case 1:
-                if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
-                    $this->throwForbidden();
-
-                $username = $this->getRequestBodyValue( 'username' );
-
-                $data = array(
-                    'username'  => $username,
-                    'created'   => 'NOW()',
-                    'createdby' => $this->loggedUser->getId()
-                );
-
-                $this->insertArrayIntoDatabase('todo_user', $data);
-                $id = mysql_insert_id();
-
-                $this->response = array( 'id' => $id );
-                $this->responseStatus = 201; // created
-
-                break;
-        }
-
-        return null;
-    }
-
-    public function put()
+    /*public function put()
     {
         switch ( $this->getResourceNamePartsCount() )
         {
@@ -163,29 +196,6 @@ class Controllers_user extends RestController
                     $this->responseStatus = 202;
                 }
 
-                ## user/<id>/password [PUT]: Change password
-                if ( $this->getResourceNamePart( 2 ) == 'password' )
-                {
-                    $user_id = intval($this->getResourceNamePart( 1 ));
-
-                    if ( $user_id != $this->loggedUser->getId() && !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
-                        $this->throwForbidden();
-
-                    $password = $this->getRequestBodyValue( 'password' );
-
-                    $query = mysql_query( "SELECT role FROM `todo_user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-                    $row   = mysql_fetch_array($query, MYSQL_NUM);
-                    $role  = $row[0];
-
-                    if ($role == 'admin' && $user_id != $this->loggedUser->getId() && !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ))
-                        $this->throwForbidden();
-
-                    mysql_query( "UPDATE `todo_user` SET password='{$password}' WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-
-                    $this->response = 'ok';
-                    $this->responseStatus = 200;
-                }
-
                 ## user/<id>/calendar?day=15275
                 if ( $this->getResourceNamePart( 2 ) == 'calendar' )
                 {
@@ -202,91 +212,10 @@ class Controllers_user extends RestController
                     $this->response = $calendar_controller->PutCalendarRow($worker);
                     $this->responseStatus = 200;
                 }
-
-                ## user/<id>/clientSettings [PUT]: переопределяет клиентские настройки пользователя
-                if ( $this->getResourceNamePart( 2 ) == 'clientSettings' )
-                {
-                    $user_id = $this->getResourceNamePart( 1 );
-
-                    if ( $user_id != $this->loggedUser->getId())
-                        $this->throwForbidden();
-
-                    mysql_query( "UPDATE `todo_user` SET clientSettings='{$this->request['body']}' WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-
-                    $this->response = 'ok';
-                    $this->responseStatus = 200;
-                }
-
-                ## user/<id>/vars [PUT]:           переопределяет доп. инфо о пользователе
-                if ( $this->getResourceNamePart( 2 ) == 'vars' )
-                {
-                    $user_id = $this->getResourceNamePart( 1 );
-
-                    if ( $user_id != $this->loggedUser->getId() && !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
-                        $this->throwForbidden();
-
-                    mysql_query( "UPDATE `todo_user` SET vars='{$this->request['body']}' WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-
-                    $this->response = 'ok';
-                    $this->responseStatus = 200;
-                }
-                break;
-            ## user/<id> [PUT]: Modifies the specified user.
-            case 2:
-                if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ))
-                    $this->throwForbidden();
-
-                $user_id = $this->getResourceNamePart( 1 );
-
-                $this->getUserFromDatabase($user_id);
-
-                if ($this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ))
-                    $editable_columns = array(
-                        'deleted'    => 'deleted',
-                        'username'   => 'username',
-                        'role'       => 'role',
-                        'def_role'   => 'def_role',
-                        'group'      => 'group',
-                        'firstname'  => 'firstname',
-                        'lastname'   => 'lastname',
-                    );
-
-                $role = $this->getRequestBodyValue( 'role', false );
-
-                if ($role == 'admin' && !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ))
-                    $this->throwForbidden();
-
-                $sets = $this->GetEditablesFromBody($editable_columns);
-                $sets = implode(',', $sets);
-
-                mysql_query( "UPDATE `todo_user` SET {$sets} WHERE id='{$user_id}'" ) or $this->throwMySQLError();
-
-                $this->response = 'ok';
-                $this->responseStatus = 202; // accepted
-                break;
         }
 
         return null;
-    }
-
-    public function delete()
-    {
-        ## user/<id>/calendar?day=15275 [DELETE]
-        if ( $this->getResourceNamePart( 2 ) == 'calendar' )
-        {
-            if (
-            !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )
-            && !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT )
-            )
-                $this->throwForbidden();
-
-            $user_id = intval($this->getResourceNamePart( 1 ));
-
-            $calendar_controller = new Controllers_calendar($this->request);
-            $this->response = $calendar_controller->DeleteCalendarRowByUser($user_id);
-            $this->responseStatus = 200;
-        }
-    }
+    }*/
 }
 
 ?>

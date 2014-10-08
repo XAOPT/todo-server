@@ -141,7 +141,7 @@ abstract class RestController {
         if ( !isset( $val ) )
         {
             if ( $expected )
-                throw new Exception('Bad Request', 400);
+                throw new Exception("Bad Request. ".$name." is undefined", 400);
             else
                 return null;
         }

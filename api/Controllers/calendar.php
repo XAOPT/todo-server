@@ -84,6 +84,25 @@ class Controllers_calendar extends RestController
     public function delete() {
         return null;
     }
+
+    /*public function delete()
+    {
+        ## user/<id>/calendar?day=15275 [DELETE]
+        if ( $this->getResourceNamePart( 2 ) == 'calendar' )
+        {
+            if (
+            !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )
+            && !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT )
+            )
+                $this->throwForbidden();
+
+            $user_id = intval($this->getResourceNamePart( 1 ));
+
+            $calendar_controller = new Controllers_calendar($this->request);
+            $this->response = $calendar_controller->DeleteCalendarRowByUser($user_id);
+            $this->responseStatus = 200;
+        }
+    }*/
 }
 
 ?>
