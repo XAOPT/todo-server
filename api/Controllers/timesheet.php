@@ -2,66 +2,74 @@
 
 class Controllers_timesheet extends RestController
 {
-    function _getTaskTimesheets($task_id)
+    public function routes()
     {
+        return array(
+            'get' => array(
+                'timesheet' => 'GetTimesheet'
+            ),
+            'put' => array(
+                'timesheet' => 'EditTimesheet'
+            )
+        );
+    }
+
+    public function GetTimesheet()
+    {
+        $userid  = intval($this->getRequestParamValue('userid', false));
+        $taskid  = intval($this->getRequestParamValue('userid', false));
+
+        $where = array();
+
+        if ($userid) {
+            $where[] = "`userid`={$userid}";
+        }
+        if ($taskid) {
+            $where[] = "`taskid`={$taskid}";
+        }
+
+        if (empty($where))
+            throw new Exception('Search params are empty', 400);
+
+        $where = implode(" AND ", $where);
+
         $items = array();
+        $query = mysql_query("SELECT * FROM `todo_timesheet` WHERE {$where}") or $this->throwMySQLError();
 
-        $query = mysql_query( "SELECT * FROM `todo_timesheet` WHERE task='{$task_id}'" ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query, MYSQL_ASSOC ) )
+        while( $obj = mysql_fetch_array( $query ) )
         {
-            $items[] = $dbtask;
+            $items[] = $this->normalizeObject( $obj );
         }
 
-        return $items;
+        $this->response = array(
+            "status" => 0,
+            "items" => $items
+        );
+        $this->responseStatus = 200;
     }
 
-    function _getUserTimesheet($worker = 0, $day = 0)
+    public function EditTimesheet()
     {
-        if (!$day || !$worker)
-            return null;
+        $userid  = intval($this->getRequestBodyValue('userid', false));
+        $day = intval($this->getRequestBodyValue('day', true));
+        $taskid = intval($this->getRequestBodyValue('taskid', true));
+        $worktimeSeconds = intval($this->getRequestBodyValue('worktimeSeconds', true));
 
-        $response = array();
+        $controllers_task = new Controllers_task($this->request);
+        $sheets = $controllers_task->checkTaskExists($task_id);
 
-        $response['totalWorktimeSeconds'] = 0;
-        $response['items'] = array();
-
-        $query = mysql_query("SELECT task, SUM(worktimeSeconds) AS worktimeSeconds FROM `todo_timesheet` GROUP BY worker, day HAVING worker='{$worker}' AND day='{$day}'");
-        while( $dbtask = mysql_fetch_array( $query, MYSQL_ASSOC ) )
-        {
-            $response['items'][] = $dbtask;
-
-            $response['totalWorktimeSeconds'] += $dbtask['worktimeSeconds'];
-        }
-
-        return $response;
-    }
-
-    function saveTimesheetRow($task, $worker)
-    {
-        $day = $this->getRequestBodyValue('day');
-        $worktimeSeconds = $this->getRequestBodyValue('worktimeSeconds');
+        // TODO: если не задан юзерайди, то приравнять его к текущему юзеру
 
         if ($worktimeSeconds>0)
-            mysql_query("INSERT INTO `todo_timesheet` (day, worker, task, worktimeSeconds) VALUES ({$day}, {$worker}, {$task}, {$worktimeSeconds}) ON DUPLICATE KEY UPDATE worktimeSeconds={$worktimeSeconds};") or $this->throwMySQLError();
+            mysql_query("INSERT INTO `todo_timesheet` (day, userid, taskid, worktimeSeconds) VALUES ({$day}, {$userid}, {$taskid}, {$worktimeSeconds}) ON DUPLICATE KEY UPDATE worktimeSeconds={$worktimeSeconds};") or $this->throwMySQLError();
         else
-            mysql_query("DELETE FROM `todo_timesheet` WHERE day='{$day}' AND worker='{$worker}' AND task='{$task}'") or $this->throwMySQLError();
-    }
+            mysql_query("DELETE FROM `todo_timesheet` WHERE day='{$day}' AND userid='{$userid}' AND taskid='{$taskid}'") or $this->throwMySQLError();
 
+        $this->response = array(
+            "status" => 0
+        );
 
-    public function get() {
-        return null;
-    }
-
-    public function put() {
-        return null;
-    }
-
-    public function post() {
-        return null;
-    }
-
-    public function delete() {
-        return null;
+        $this->responseStatus = 202;
     }
 }
 

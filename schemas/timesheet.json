@@ -1,0 +1,8 @@
+{
+    "param": {
+        "day" : "int",
+        "userid" : "int",
+        "taskid" : "int",
+        "worktimeSeconds" : "int"
+    }
+}

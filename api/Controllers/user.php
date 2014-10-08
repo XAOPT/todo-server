@@ -138,28 +138,6 @@ class Controllers_user extends RestController
         return $user;
     }*/
 
-    /*public function get()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            case 3:
-                ## user/<id>/timesheet?day=<day> [GET]:
-                if ( $this->getResourceNamePart( 2 ) == 'timesheet' )
-                {
-                    $day    = intval($_GET['day']);
-                    $worker = $this->getResourceNamePart( 1 );
-
-                    $controllers_timesheet = new Controllers_timesheet($this->request);
-                    $sheets = $controllers_timesheet->_getUserTimesheet($worker, $day);
-
-                    $this->response = $sheets;
-                    $this->responseStatus = 200;
-                }
-        }
-
-        return null;
-    }*/
-
     /*public function put()
     {
         switch ( $this->getResourceNamePartsCount() )

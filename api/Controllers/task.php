@@ -243,17 +243,6 @@ class Controllers_task extends RestController
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 /*    private function _getTaskFromDatabase( $task_id )
     {
         $query = mysql_query( "SELECT * FROM `todo_task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
@@ -263,70 +252,6 @@ class Controllers_task extends RestController
 
         return null;
     }*/
-
-
-    public function GetTaskTimesheet()
-    {
-        $task_id = intval($this->getResourceNamePart( 1 ));
-
-        $controllers_timesheet = new Controllers_timesheet($this->request);
-        $sheets = $controllers_timesheet->_getTaskTimesheets($task_id, 0);
-
-        $this->response = $sheets;
-        $this->responseStatus = 200;
-    }
-
-    public function EditTaskTimeshit()
-    {
-        ## task/<id>/timesheet?day=15275
-        $task_id = intval($this->getResourceNamePart( 1 ));
-
-        $query = mysql_query( "SELECT project, assignee FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
-        $task  = mysql_fetch_array($query, MYSQL_ASSOC);
-
-        if (empty($task))
-            throw new Exception( 'Not Found', 404 );
-
-        /* Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management
-        Если у юзера нет прав task.management, то worker не должен указываться, т.к. автоматически подразумевается assignee задачи. */
-        /*if (
-        !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] )
-        && $this->loggedUser->getId() != $task['assignee']
-        )
-            $this->throwForbidden();*/
-
-        /*$worker = 0;
-        if ( $this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
-            $worker  = $this->getRequestBodyValue('worker', false);*/
-
-        if (!$worker)
-            $worker = $this->loggedUser->getId();
-
-        $controllers_timesheet = new Controllers_timesheet($this->request);
-        $sheets = $controllers_timesheet->saveTimesheetRow($task_id, $worker);
-
-        $this->response = array("status" => 0);
-        $this->responseStatus = 202; // accepted
-    }
-
-    private function GetTasksByAssigneesTimesheet($assignee, $dayfrom, $dayto)
-    {
-        $items = array();
-        $query = "
-            SELECT DISTINCT ts.task, t.*
-            FROM `todo_timesheet` AS ts
-            LEFT JOIN `todo_task` AS t ON (t.id=ts.task)
-            WHERE worker='{$assignee}' AND day BETWEEN {$dayfrom} AND {$dayto}
-        ";
-
-        $query = mysql_query( $query ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query ) )
-        {
-            $items[] = $this->createTaskFromDatabaseObject( $dbtask );
-        }
-
-        return $items;
-    }
 
    /* public function get()
     {
