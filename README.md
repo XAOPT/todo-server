@@ -392,37 +392,35 @@ text
 
 Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
 
-**GET task/\d+/timesheet**
-``` json
-Response: [
-    { “day” : 15275, “worker” : 22, “worktimeSeconds” : 3600 },
-    { “day” : 15276, “worker” : 22, “worktimeSeconds” : 3600 },
-]
-```
-
-Для рабочих дней сделано исключение и они создаются не POST’ом а простым PUT’ом - это как бы модификация свойств задачи.
-
-**GET user/\d+/timesheet?day=15275**
+**GET timesheet?userid&taskid&dayfrom&dayto**
 ``` json
 Response: {
-“totalWorktimeSeconds” : 7200,
-“items” : [
-    { “task” : 123, “worktimeSeconds” : 3600 },
-    { “task” : 124, “worktimeSeconds” : 3600 }
-    ]
+  "status": 0,
+  "items": [
+    { 
+      "day" : 15275, 
+      "userid" : 22,
+      "taskid" : 22,
+      "worktimeSeconds" : 3600 
+    }
+  ]
+
 }
 ```
-Возвращает таймшит указанного юзера на указанный день по всем задачам над которыми он работал.
 
-**PUT task/\d+/timesheet?day=15275**  
-_access: administer, task.management, assignee_
-Body: {
-  “worker” : 22 (опционально)
-  “worktimeSeconds” : “1000”
+**PUT timesheet**  
+_access: administer, task.management, assignee_  
+``` json
+Request: {
+  "day": 15000,
+  "userid" : 22, // опционально
+  "taskid" : 30,
+  "worktimeSeconds" : 1000
 }
+```
 Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management
 
-Если у юзера нет прав task.management, то worker не должен указываться, т.к. автоматически подразумевается assignee задачи.
+Если у юзера нет прав task.management, то userid не должен указываться, т.к. автоматически подразумевается assignee задачи.
 
 Запись удаляется если worktimeSeconds = нулю.
 
@@ -441,7 +439,7 @@ Response: {
   "items" : [
     {
       "day": 15232,
-      "userid": 0
+      "userid": 0,
       "kind": "dayoff"
     }
   ]
