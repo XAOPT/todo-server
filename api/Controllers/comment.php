@@ -98,7 +98,7 @@ class Controllers_comment extends RestController
         switch ( $this->getResourceNamePartsCount() )
         {
             case 3:
-                ## comment/<id>/comment [POST]: ��������� ����������� � �����������.
+                ## comment/<id>/comment [POST]: Äîáàâëÿåò êîììåíòàðèé ê êîììåíòàðèþ.
                 if ( $this->getResourceNamePart( 2 ) != 'comment' )
                     return null;
 
@@ -174,9 +174,45 @@ class Controllers_comment extends RestController
         return null;
     }
 
-    public function delete() {
+   /* public function post() {
+        switch ( $this->getResourceNamePartsCount() )
+        {
+            case 3:
+                ## task/<id>/comment [POST]: Добавляет корневой комментарий к задаче (он может быть только один)
+                if ( $this->getResourceNamePart( 2 ) == 'comment' )
+                {
+                    $task_id = intval($this->getResourceNamePart( 1 ));
+
+                    $query    = mysql_query( "SELECT createdby FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+                    $task     = mysql_fetch_array($query, MYSQL_NUM);
+                    $createdby  = $task[0];
+
+                    if (empty($createdby))
+                        $this->throwForbidden();
+
+                    if (
+                    !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )
+                    && $this->loggedUser->getId() != $createdby )
+                        $this->throwForbidden();
+
+                    $query = mysql_query( "SELECT COUNT(*) as total FROM `todo_comment` WHERE `parentTask`='{$task_id}' AND `parentComment`='0'" );
+                    $total = mysql_fetch_array( $query, MYSQL_NUM );
+                    if ( $total[0] > 0 )
+                        $this->throwForbidden();
+
+                    $controllers_comment = new Controllers_comment($this->request);
+                    $comment_id          = $controllers_comment->createComment($task_id, 0, $this->loggedUser->getId());
+
+                    $this->response = array('id' => $comment_id);
+                    $this->responseStatus = 202;
+                }
+                break;
+        }
         return null;
-    }
+
+    }*/
+
+
 }
 
 ?>

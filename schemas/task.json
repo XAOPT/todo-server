@@ -1,0 +1,29 @@
+{
+    "param": {
+        "id" : "int",
+        "project" : "int",
+        "startDate" : "date",
+        "duration" : "int",
+        "estimatedEffortSeconds" : "int",
+        "type" : "string",
+        "title" : "string",
+        "priority" : "int",
+        "status" : "string",
+        "assignee" : "int",
+        "parentTask" : "int",
+        "deadline" : "date",
+        "created" : "date",
+        "createdby" : "int",
+        "modified" : "date",
+        "modifiedby": "int"
+    },
+    "create" : {
+        "require" : ["project", "title"],
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+    },
+    "edit": {
+        "owner": ["*"],
+        "manager": ["*"],
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+    }
+}

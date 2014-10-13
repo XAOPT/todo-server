@@ -1,0 +1,20 @@
+{
+    "param": {
+        "id" : "int",
+        "archived" : "bool",
+        "title" : "string",
+        "shorttitle" : "string",
+        "tagcolor" : "string",
+        "created" : "timestamp",
+        "createdby" : "int"
+    },
+    "create" : {
+        "admin" : ["*"],
+        "require" : ["title"],
+        "forbidden_fields" : ["id", "archived", "created", "createdby"]
+    },
+    "edit": {
+        "admin" : ["*"],
+        "forbidden_fields" : ["id", "created", "createdby"]
+    }
+}

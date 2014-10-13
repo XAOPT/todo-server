@@ -2,87 +2,78 @@
 
 class Controllers_calendar extends RestController
 {
-    function DeleteCalendarRowByUser($worker = 0)
+    public function routes()
     {
-        $day = intval($_REQUEST['day']);
-
-        mysql_query("DELETE FROM `todo_calendar` WHERE day='{$day}' AND worker='{$worker}'") or $this->throwMySQLError();
-
-        return 'ok';
+        return array(
+            'get' => array(
+                'calendar' => 'GetCalendar'
+            ),
+            'put' => array(
+                'calendar' => 'EditCalendar'
+            ),
+            'delete' => array(
+                'calendar' => 'RemoveCalendarCell'
+            )
+        );
     }
 
-    function GetCalendarByUser($worker = 0)
+    public function GetCalendar()
     {
-        $from  = intval($_GET['from']);
-        $count = intval($_GET['count']);
+        $userid  = intval($this->getRequestParamValue('userid', false));
 
-        if (!$count) $count = 500;
+        $from  = intval($this->getRequestParamValue('from', false));
+        $count = intval($this->getRequestParamValue('count', false));
 
-        if (!$from)
-            $from = 0;
+        if (!$from) $from = 0;
+        if (!$count) $count = 100;
 
-        $days = array();
-        $query = mysql_query( "SELECT day, kind FROM `todo_calendar` WHERE `worker`='{$worker}' AND day>={$from} LIMIT 0, {$count}" ) or $this->throwMySQLError();
-        while( $dbtask = mysql_fetch_array( $query, MYSQL_ASSOC ) )
+        if (!$userid) $userid = 0;
+
+        $items = array();
+        $query = mysql_query("SELECT * FROM `todo_calendar` WHERE userid={$userid} AND day >= {$from} LIMIT 0, {$count}") or $this->throwMySQLError();
+
+        while( $obj = mysql_fetch_array( $query ) )
         {
-            $days[] = $dbtask;
+            $items[] = $this->normalizeObject( $obj );
         }
 
-        return $days;
+        $this->response = array(
+            "status" => 0,
+            "from" => $from,
+            "count" => $count,
+            "items" => $items
+        );
+        $this->responseStatus = 200;
     }
 
-    function PutCalendarRow($worker = 0)
+    public function EditCalendar()
     {
-        $available_kinds = array('workday','dayoff');
+        $userid  = intval($this->getRequestBodyValue('userid', false));
+        $day     = intval($this->getRequestBodyValue('day', true));
+        $kind    = $this->getRequestBodyValue('kind', true);
 
-        $day  = intval($_REQUEST['day']);
-        $kind = $this->getRequestBodyValue('kind');
+        mysql_query("INSERT INTO `todo_calendar` (day, userid, kind) VALUES ({$day}, {$userid}, '{$kind}') ON DUPLICATE KEY UPDATE kind='{$kind}';") or $this->throwMySQLError();
 
-        if (!in_array($kind, $available_kinds) || $day <= 14000)
-            throw new Exception( 'Bad Request', 400 );
+        $this->response = array(
+            "status" => 0
+        );
 
-        mysql_query("INSERT INTO `todo_calendar` (day, worker, kind) VALUES ({$day}, {$worker}, '{$kind}') ON DUPLICATE KEY UPDATE kind='{$kind}';") or $this->throwMySQLError();
-
-        return 'ok';
+        $this->responseStatus = 202;
     }
 
-    public function get()
+    public function RemoveCalendarCell()
     {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            ## calendar?from=15275&count=100 [GET]: Returns full task description.
-            case 1:
-                $this->response = $this->GetCalendarByUser();
-                $this->responseStatus = 200;
-                break;
-        }
+        $userid  = intval($this->getRequestParamValue('userid', false));
+        $day     = intval($this->getRequestParamValue('day', true));
 
-        return null;
-    }
+        if (!$userid) $userid = 0;
 
-    public function put()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            case 1:
-                ## calendar?day=15275 [PUT]
-                if ( !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )  )
-                    $this->throwForbidden();
+        mysql_query("DELETE FROM `todo_calendar` WHERE day='{$day}' AND userid='{$userid}'") or $this->throwMySQLError();
 
-                $this->response = $this->PutCalendarRow();
-                $this->responseStatus = 202; // accepted
-                break;
-        }
-
-        return null;
-    }
-
-    public function post() {
-        return null;
-    }
-
-    public function delete() {
-        return null;
+        $this->response = array(
+            "status" => 0
+        );
+        $this->responseStatus = 200;
     }
 }
 
