@@ -1,13 +1,53 @@
 <?php
 
-class Controllers_converter extends RestController
+class Controllers_convert extends RestController
 {
-    public function post()
+    public function routes()
     {
-        return null;
+        return array(
+            'get' => array(
+                'convert/users' => 'ConvertUsers'
+            )
+        );
     }
 
-    public function get()
+    public function ConvertUsers()
+    {
+        $query = mysql_query( "SELECT * FROM `user`" ) or $this->throwMySQLError();
+
+        mysql_query("TRUNCATE TABLE `todo_user`");
+
+        while( $d = mysql_fetch_array( $query ) )
+        {
+            $vars = array();
+
+            if ($d['email']) $vars['email'] = $d['email'];
+            if ($d['birthday']) $vars['birthday'] = $d['birthday'];
+
+            $data = array(
+                'id'         => $d['id'],
+                'email'      => $d['login'],
+                'role'       => $d['role'],
+                'group'      => $d['group'],
+                'firstname'  => $d['firstName'],
+                'lastname'   => $d['lastName'],
+                'vars'       => json_encode($vars),
+                'clientSettings' => '',
+                'created'    => $d['created'],
+                'createdby'  => 0,
+                'deleted'    => $d['deleted'],
+            );
+
+            $this->insertArrayIntoDatabase('todo_user', $data);
+        }
+
+        $this->response = array(
+            "status" => 0
+        );
+        $this->responseStatus = 200;
+    }
+
+    /*ublic function get()
     {
         $table = $this->getResourceNamePart( 1 );
 
@@ -57,47 +97,8 @@ class Controllers_converter extends RestController
 
         }
 
-        ##users
-        if ($table == 'user')
-        {
-            $query = mysql_query( "SELECT * FROM `user`" ) or $this->throwMySQLError();
-
-            mysql_query("TRUNCATE TABLE `todo_user`");
-            while( $d = mysql_fetch_array( $query ) )
-            {
-                $vars = array();
-
-                if ($d['email']) $vars['email'] = $d['email'];
-                if ($d['birthday']) $vars['birthday'] = $d['birthday'];
-
-                $data = array(
-                    'id'         => $d['id'],
-                    'username'   => $d['login'],
-                    'role'       => $d['role'],
-                    'group'      => $d['group'],
-                    'firstname'  => $d['firstName'],
-                    'lastname'   => $d['lastName'],
-                    'vars'       => json_encode($vars),
-                    'clientSettings' => '',
-                    'created'    => $d['created'],
-                    'createdby'  => 0,
-                    'deleted'    => $d['deleted'],
-                );
-
-                $this->insertArrayIntoDatabase('todo_user', $data);
-            }
-        }
-
         $this->response = 'ok';
-    }
-
-    public function put() {
-        return null;
-    }
-
-    public function delete() {
-        return null;
-    }
+    }*/
 }
 
 ?>
