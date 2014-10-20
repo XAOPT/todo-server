@@ -38,15 +38,12 @@ class Controllers_project extends RestController
     // project [GET]: Return all projects.
     public function ProjectList()
     {
-        $projects = array(
-            "status" => 0,
-            "items" => array()
-        );
+        $projects = array();
 
         $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project`" ) or $this->throwMySQLError();
         while( $db_project = mysql_fetch_array( $query ) )
         {
-            $projects['items'][] = $this->normalizeObject( $db_project );
+            $projects[] = $this->normalizeObject( $db_project );
         }
 
         $this->response = array(

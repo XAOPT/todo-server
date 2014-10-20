@@ -6,7 +6,8 @@ class Controllers_convert extends RestController
     {
         return array(
             'get' => array(
-                'convert/users' => 'ConvertUsers'
+                'convert/users' => 'ConvertUsers',
+                'convert/projects' => 'ConvertProjects'
             )
         );
     }
@@ -47,22 +48,33 @@ class Controllers_convert extends RestController
         $this->responseStatus = 200;
     }
 
+    public function ConvertProjects()
+    {
+        $query = mysql_query( "SELECT * FROM `project`" ) or $this->throwMySQLError();
+
+        mysql_query("TRUNCATE TABLE `todo_project`");
+        while( $d = mysql_fetch_array( $query ) )
+        {
+            $data = array(
+                'id'         => $d['id'],
+                'title'      => mysql_real_escape_string($d['title']),
+                'shorttitle' => $d['abc'],
+                'tagcolor'   => $d['color'],
+                'created'    => $d['created']
+            );
+
+            $this->insertArrayIntoDatabase('todo_project', $data);
+        }
+
+        $this->response = array(
+            "status" => 0
+        );
+        $this->responseStatus = 200;
+    }
+
     /*ublic function get()
     {
         $table = $this->getResourceNamePart( 1 );
-
-        ## project
-        if ($table == 'project')
-        {
-            $query = mysql_query( "SELECT * FROM `project`" ) or $this->throwMySQLError();
-
-            mysql_query("TRUNCATE TABLE `todo_project`");
-            while( $d = mysql_fetch_array( $query ) )
-            {
-                $d['title']  = mysql_real_escape_string($d['title']);
-                mysql_query("INSERT INTO `todo_project` (id, title, shorttitle, tagcolor, created) VALUES ('{$d['id']}','{$d['title']}','{$d['abc']}','{$d['color']}','{$d['created']}')");
-            }
-        }
 
         ##tasks
         if ($table == 'task')
