@@ -77,6 +77,9 @@ class Rest {
         try {
             $this->request['controller'] = $this->request['resource'][0];
 
+            if ($this->request['method'] == 'options')
+                throw new Exception('Options', 200);
+
             $controllerName = $this->getController();
 
             if(null == $controllerName) {

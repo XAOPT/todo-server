@@ -1,6 +1,7 @@
 <?php
 
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
 
 defined('APPLICATION_PATH') || define('APPLICATION_PATH', realpath(dirname(__FILE__)));
 /*
@@ -23,8 +24,6 @@ set_include_path(implode(PATH_SEPARATOR, array(
 )));
 
 */
-
-
 ob_start();
 
 function __autoload($path) {
