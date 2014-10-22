@@ -17,7 +17,7 @@ class Controllers_timesheet extends RestController
     public function GetTimesheet()
     {
         $userid  = intval($this->getRequestParamValue('userid', false));
-        $taskid  = intval($this->getRequestParamValue('userid', false));
+        $taskid  = intval($this->getRequestParamValue('taskid', false));
 
         $where = array();
 
