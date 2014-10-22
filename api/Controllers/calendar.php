@@ -32,7 +32,7 @@ class Controllers_calendar extends RestController
         $to = $from + $count;
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_calendar` WHERE userid={$userid} AND day >= {$from} AND day <= {$to}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `todo_calendar` WHERE userid={$userid} AND day >= {$from} AND day < {$to}") or $this->throwMySQLError();
 
         while( $obj = mysql_fetch_array( $query ) )
         {
