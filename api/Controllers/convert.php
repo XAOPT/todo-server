@@ -59,7 +59,7 @@ class Controllers_convert extends RestController
                 'id'         => $d['id'],
                 'title'      => mysql_real_escape_string($d['title']),
                 'shorttitle' => $d['abc'],
-                'tagcolor'   => $d['color'],
+                'tagcolor'   => dechex(abs($d['color'])),
                 'created'    => $d['created']
             );
 

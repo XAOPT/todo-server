@@ -21,15 +21,29 @@ class Controllers_timesheet extends RestController
         $from   = intval($this->getRequestParamValue('from', false));
         $count  = intval($this->getRequestParamValue('count', false));
 
+        $this->response = array(
+            "status" => 0
+        );
+
+        /* search condition */
         $where = array();
 
         if ($userid) {
+            $this->response['userid'] = $userid;
+
             $where[] = "`userid`={$userid}";
         }
+
         if ($taskid) {
+            $this->response['taskid'] = $taskid;
+
             $where[] = "`taskid`={$taskid}";
         }
+
         if ($from && $count) {
+            $this->response['from'] = $from;
+            $this->response['count'] = $count;
+
             $to = $from + $count;
             $where[] = "`day` >= {$from} AND `day` < {$to}";
         }
@@ -38,6 +52,7 @@ class Controllers_timesheet extends RestController
             throw new Exception('Search params are empty', 400);
 
         $where = implode(" AND ", $where);
+        /* end of search condition*/
 
         $items = array();
         $query = mysql_query("SELECT * FROM `todo_timesheet` WHERE {$where}") or $this->throwMySQLError();
@@ -47,10 +62,7 @@ class Controllers_timesheet extends RestController
             $items[] = $this->normalizeObject( $obj );
         }
 
-        $this->response = array(
-            "status" => 0,
-            "items" => $items
-        );
+        $this->response["items"] = $items;
         $this->responseStatus = 200;
     }
 
