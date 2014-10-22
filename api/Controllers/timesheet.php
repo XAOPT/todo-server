@@ -16,8 +16,10 @@ class Controllers_timesheet extends RestController
 
     public function GetTimesheet()
     {
-        $userid  = intval($this->getRequestParamValue('userid', false));
-        $taskid  = intval($this->getRequestParamValue('taskid', false));
+        $userid = intval($this->getRequestParamValue('userid', false));
+        $taskid = intval($this->getRequestParamValue('taskid', false));
+        $from   = intval($this->getRequestParamValue('from', false));
+        $count  = intval($this->getRequestParamValue('count', false));
 
         $where = array();
 
@@ -26,6 +28,10 @@ class Controllers_timesheet extends RestController
         }
         if ($taskid) {
             $where[] = "`taskid`={$taskid}";
+        }
+        if ($from && $count) {
+            $to = $from + $count;
+            $where[] = "`day` >= {$from} AND `day` < {$to}";
         }
 
         if (empty($where))
@@ -56,7 +62,7 @@ class Controllers_timesheet extends RestController
         $worktimeSeconds = intval($this->getRequestBodyValue('worktimeSeconds', true));
 
         $controllers_task = new Controllers_task($this->request);
-        $sheets = $controllers_task->checkTaskExists($task_id);
+        $sheets = $controllers_task->checkTaskExists($taskid);
 
         // TODO: если не задан юзерайди, то приравнять его к текущему юзеру
 
