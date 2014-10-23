@@ -65,7 +65,13 @@ class Controllers_task extends RestController
             $where[] = "`assignee`={$assignee}";
         }
         if ($status) {
-            $where[] = "`status`={$status}";
+            $status = explode(',', $status);
+            if (count($status))
+            foreach ($status as &$s) {
+                $s = trim($s);
+            }
+            $status = implode("','",$status);
+            $where[] = "`status` IN('{$status}')";
         }
         if ($priority) {
             $where[] = "`priority`={$priority}";
@@ -80,7 +86,7 @@ class Controllers_task extends RestController
         $where = implode(" AND ", $where);
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_task` WHERE {$where} LIMIT {$from}, {$count}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `todo_task` WHERE {$where} ORDER BY priority DESC LIMIT {$from}, {$count}") or $this->throwMySQLError();
 
         while( $dbtask = mysql_fetch_array( $query ) )
         {
@@ -217,38 +223,6 @@ class Controllers_task extends RestController
 
         if ( $task = mysql_fetch_array( $query ) )
             return $task;
-
-        return null;
-    }*/
-
-   /* public function get()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            case 3:
-                ## task/<id>/oldnote [GET]: temporary function
-                if ( $this->getResourceNamePart( 2 ) == 'oldnote' )
-                {
-                    $task_id = $this->getResourceNamePart( 1 );
-
-                    $query = mysql_query( "SELECT notes FROM `task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
-                    $task = mysql_fetch_array( $query );
-
-                    echo $task['notes']; exit;
-                    $this->responseStatus = 200;
-                }
-                ## task/<id>/oldcalendar [GET]: temporary function
-                if ( $this->getResourceNamePart( 2 ) == 'oldcalendar' )
-                {
-                    $task_id = $this->getResourceNamePart( 1 );
-
-                    $query = mysql_query( "SELECT calendar FROM `task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
-                    $task = mysql_fetch_array( $query );
-
-                    echo $task['calendar']; exit;
-                    $this->responseStatus = 200;
-                }
-        }
 
         return null;
     }*/
