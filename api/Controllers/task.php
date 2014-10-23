@@ -31,7 +31,7 @@ class Controllers_task extends RestController
     public function GetTasks()
     {
         $id        = intval($this->getRequestParamValue('id', false));
-        $project   = intval($this->getRequestParamValue('project', false));
+        $project   = $this->getRequestParamValue('project', false);
         $title     = $this->getRequestParamValue('title', false);
         $text      = $this->getRequestParamValue('text', false);
         $assignee  = intval($this->getRequestParamValue('assignee', false));
@@ -53,7 +53,8 @@ class Controllers_task extends RestController
             $where[] = "`id`={$id}";
         }
         if ($project) {
-            $where[] = "`project`={$project}";
+            $project = implode(",", $project);
+            $where[] = "`project` IN ({$project})";
         }
         if ($title) {
             $where[] = "`title` LIKE '%{$title}%'";
@@ -65,13 +66,8 @@ class Controllers_task extends RestController
             $where[] = "`assignee`={$assignee}";
         }
         if ($status) {
-            $status = explode(',', $status);
-            if (count($status))
-            foreach ($status as &$s) {
-                $s = trim($s);
-            }
             $status = implode("','",$status);
-            $where[] = "`status` IN('{$status}')";
+            $where[] = "`status` IN ('{$status}')";
         }
         if ($priority) {
             $where[] = "`priority`={$priority}";

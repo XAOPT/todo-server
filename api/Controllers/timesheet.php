@@ -17,7 +17,7 @@ class Controllers_timesheet extends RestController
     public function GetTimesheet()
     {
         $userid = intval($this->getRequestParamValue('userid', false));
-        $taskid = intval($this->getRequestParamValue('taskid', false));
+        $taskid = $this->getRequestParamValue('taskid', false);
         $from   = intval($this->getRequestParamValue('from', false));
         $count  = intval($this->getRequestParamValue('count', false));
 
@@ -37,7 +37,16 @@ class Controllers_timesheet extends RestController
         if ($taskid) {
             $this->response['taskid'] = $taskid;
 
-            $where[] = "`taskid`={$taskid}";
+            if (is_array($taskid)) {
+                foreach ($taskid as &$t) {
+                    $t = intval($t);
+                }
+                $taskid = implode(',', $taskid);
+            }
+            else
+                $taskid = intval($taskid);
+
+            $where[] = "`taskid` IN ({$taskid})";
         }
 
         if ($from && $count) {

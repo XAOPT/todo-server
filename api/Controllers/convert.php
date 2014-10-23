@@ -76,7 +76,7 @@ class Controllers_convert extends RestController
 
     public function ConvertTasks()
     {
-        $query = mysql_query( "SELECT *, HEX(calendar) AS calendar FROM `task`" ) or $this->throwMySQLError();
+        $query = mysql_query( "SELECT *, HEX(calendar) AS calendar FROM `task` WHERE calendarVersion IS NOT NULL" ) or $this->throwMySQLError();
         mysql_query("TRUNCATE TABLE `todo_task`");
         mysql_query("TRUNCATE TABLE `todo_timesheet`");
 

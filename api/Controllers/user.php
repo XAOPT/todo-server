@@ -30,6 +30,7 @@ class Controllers_user extends RestController
 
         $from      = intval($this->getRequestParamValue('from', false));
         $count     = intval($this->getRequestParamValue('count', false));
+        $deleted   = intval($this->getRequestParamValue('deleted', false));
 
         if (!$from) $from = 0;
         if (!$count) $count = 100;
@@ -39,6 +40,8 @@ class Controllers_user extends RestController
         if ($id) {
             $where[] = "`id`={$id}";
         }
+
+        $where[] = "`deleted`={$deleted}";
 
         if (empty($where))
             $where[] = "1=1";

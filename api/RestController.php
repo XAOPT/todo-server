@@ -161,7 +161,14 @@ abstract class RestController {
                 return null;
         }
 
-        return mysql_real_escape_string($val);
+        if (!is_array($val))
+            return mysql_real_escape_string($val);
+        else {
+            foreach ($val as &$v) {
+                $v = mysql_real_escape_string($v);
+            }
+            return $val;
+        }
     }
 
     protected function throwMySQLError()
