@@ -123,7 +123,7 @@ class Rest {
             $this->response = $controller_object->getResponse();
             $this->responseStatus = $controller_object->getResponseStatus();
 
-            $this->writeRequestLog($user_id);
+            //$this->writeRequestLog($user_id);
 
             if(is_null($this->response)) {
                 throw new Exception('Answer is empty', 405);

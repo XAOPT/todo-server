@@ -41,6 +41,8 @@ abstract class RestController {
         $query = "INSERT INTO ".$table_name." (".$var.") VALUES (".$values.")";
 
         mysql_query( $query ) or $this->throwMySQLError();
+
+        return mysql_insert_id();
     }
 
     /**
