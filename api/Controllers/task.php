@@ -21,9 +21,9 @@ class Controllers_task extends RestController
         );
     }
 
-    public function checkTaskExists($task_id = 0)
+    public function checkTaskExists($id = 0)
     {
-        $result = mysql_query( "SELECT * FROM `todo_task` WHERE id='{$task_id}'" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT * FROM `todo_task` WHERE id='{$id}'" ) or $this->throwMySQLError();
         if (!mysql_num_rows($result))
             throw new Exception( 'Not Found', 404 );
     }
@@ -209,19 +209,6 @@ class Controllers_task extends RestController
         $this->response = array('id', $attach_id);
         $this->responseStatus = 402;
     }
-
-
-
-
-/*    private function _getTaskFromDatabase( $task_id )
-    {
-        $query = mysql_query( "SELECT * FROM `todo_task` WHERE `id`='{$task_id}'" ) or $this->throwMySQLError();
-
-        if ( $task = mysql_fetch_array( $query ) )
-            return $task;
-
-        return null;
-    }*/
 }
 
 ?>

@@ -1,0 +1,21 @@
+{
+    "param": {
+        "id" : "int",
+        "taskid" : "int",
+        "parentComment" : "int",
+        "text" : "string",
+        "created" : "date",
+        "createdby" : "int",
+        "modified" : "date",
+        "modifiedby": "int"
+    },
+    "create" : {
+        "require" : ["text"],
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+    },
+    "edit": {
+        "owner": ["*"],
+        "manager": ["*"],
+        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+    }
+}

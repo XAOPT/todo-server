@@ -2,29 +2,86 @@
 
 class Controllers_comment extends RestController
 {
-    function getCommentFromDatabase($comment_id)
+    public function routes()
     {
-        $query = mysql_query( "SELECT * FROM `todo_comment` WHERE `id`='{$comment_id}'" ) or $this->throwMySQLError();
+        return array(
+            'get' => array(
+                'comment' => 'GetComments'
+            ),
+            'post' => array(
+                'comment' => 'CreateComment'
+            ),
+            'put' => array(
+                'comment/\d+' => 'EditComment'
+            ),
+        );
+    }
 
-        $comment = mysql_fetch_array( $query );
+    public function checkCommentExists($id = 0)
+    {
+        $result = mysql_query( "SELECT * FROM `todo_comment` WHERE id='{$id}'" ) or $this->throwMySQLError();
+        if (!mysql_num_rows($result))
+            throw new Exception( 'Not Found', 404 );
+    }
 
-        if (empty($comment))
-            return null;
+    public function GetComments()
+    {
+        $taskid = intval($this->getRequestParamValue('taskid', true));
 
-        $tmp = array(
-            'id     '    => $comment['id'],
-            'parentTask' => $comment['parentTask'],
-            'parentComment' => $comment['parentComment'],
-            'title'      => $comment['title'],
-            'text'       => $comment['text'],
-            'created'    => $comment['created'],
-            'createdby'  => $comment['createdby'],
-            'modified'   => $comment['modified'],
-            'modifiedby' => $comment['modifiedby']
+        $query = mysql_query("SELECT * FROM `todo_comment` WHERE taskid={$taskid} ORDER BY id") or $this->throwMySQLError();
+
+        $items = array();
+        while( $row = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->normalizeObject( $row );
+        }
+
+        $this->response = array(
+            "status" => 0,
+            "taskid" => $taskid,
+            "items" => $items
+        );
+        $this->responseStatus = 200;
+    }
+
+    public function EditComment()
+    {
+        $id = intval($this->getResourceNamePart( 1 ));
+
+        $this->checkCommentExists($id);
+
+        $data = $this->GetParamsFromRequestBody('edit');
+
+        $data['modified'] = 'NOW()';
+        $data['modifiedby'] = 0;
+
+        $this->UpdateDatabaseFromArray('todo_comment', $data, "id='{$id}'");
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
         );
 
-        return $tmp;
+        $this->responseStatus = 202;
     }
+
+    public function CreateComment()
+    {
+        $data = $this->GetParamsFromRequestBody('create');
+
+        $data['modifiedby'] = 0;
+
+        $this->insertArrayIntoDatabase('todo_comment', $data);
+        $id = mysql_insert_id();
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
+        );
+        $this->responseStatus = 201;
+    }
+
+    /*
 
     function getCommentChildrens($comment_id = 0)
     {
@@ -56,41 +113,6 @@ class Controllers_comment extends RestController
         $comment_id = mysql_insert_id();
 
         return $comment_id;
-    }
-
-    public function get()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            ## comment/<id> [GET]: Returns comment description.
-            case 2:
-                $comment_id = $this->getResourceNamePart( 1 );
-
-                $comment = $this->getCommentFromDatabase( $comment_id );
-                if ( !isset( $comment ) )
-                    throw new Exception( 'Not Found', 404 );
-
-                $this->response       = $comment;
-                $this->responseStatus = 200;
-                break;
-
-            ## comment/<id>/comment [GET]: Returns description of all child comment.
-            case 3:
-                $comment_id = $this->getResourceNamePart( 1 );
-
-                $result = mysql_query( "SELECT * FROM `todo_comment` WHERE id='{$comment_id}'" ) or $this->throwMySQLError();
-                if (!mysql_num_rows($result))
-                    throw new Exception( 'Not Found', 404 );
-
-                $items = $this->getCommentChildrens($comment_id);
-
-                $this->response       = $items;
-                $this->responseStatus = 200;
-
-                break;
-        }
-
-        return null;
     }
 
     public function post()
@@ -174,7 +196,7 @@ class Controllers_comment extends RestController
         return null;
     }
 
-   /* public function post() {
+    public function post() {
         switch ( $this->getResourceNamePartsCount() )
         {
             case 3:

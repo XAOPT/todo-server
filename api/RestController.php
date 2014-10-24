@@ -224,14 +224,15 @@ abstract class RestController {
                     $output[$key] = (int)$value;
                     break;
                 case "string":
+                case "date":
                     $output[$key] = (string)$value;
                     break;
                 case "timestamp":
                     $output[$key] = strtotime($value);
                     break;
-                 case "bool":
+                case "bool":
                     $output[$key] = (bool)$value;
-                    break;
+                   break;
             }
         }
 

@@ -353,20 +353,25 @@ php_value post_max_size 20M
 =============
 Комментарии пишутся к задачам - для отображения дискуссии. Причем, само описание задачи - это автоматически созданный корневой комментарий, а все последующие комменты вкладываются в него.
 
-**GET task/\d+/comments**
+**GET comment?taskid**
 ``` json
 Response: {
-    "id"
-    "text"
-    "created"
-    "createdby"
-    "modified"
-    "modifiedby"
-    "childes": []
+    "status": 0,
+    "taskid": 1,
+    "items": [
+        "id": 0,
+        "parentComment": 0,
+        "taskid": 0,
+        "text": "",
+        "created": "",
+        "createdby": 0,
+        "modified": "",
+        "modifiedby": 0
+    ]
 }
 ```
 
-**POST task/\d+/comment**  
+**POST comment**  
 _access: comment.management, assignee, tester_
 ``` json
 Request: {

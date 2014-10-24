@@ -112,35 +112,6 @@ class Controllers_user extends RestController
 
     /* ------------------------------------------------------ */
 
-    /*public static function getUserFromDatabase( $id )
-    {
-        $query = mysql_query( "SELECT * FROM `todo_user` WHERE `id`=$id" ) or $this->throwMySQLError();
-        if ( $object = mysql_fetch_array( $query ) )
-            return $object;
-
-        throw new Exception( 'Not Found', 404 );
-    }*/
-
-    /*public static function createUserFromDatabaseObject( $dbobj )
-    {
-        if ( !isset( $dbobj ) || empty($dbobj) )
-            throw new Exception( 'Not Found', 404 );
-
-        $user = array(
-            'class'       => 'user',
-            'id'          => (int)$dbobj['id'],
-            'deleted'     => (bool)$dbobj['deleted'],
-            'username'    => (string)$dbobj['username'],
-            'role'        => (string)$dbobj['role'],
-            'def_prole'   => (string)$dbobj['def_prole'],
-            'group'       => (string)$dbobj['group'],
-            'firstname'   => (string)$dbobj['firstname'],
-            'lastname'    => (string)$dbobj['lastname']
-            );
-
-        return $user;
-    }*/
-
     /*public function put()
     {
         switch ( $this->getResourceNamePartsCount() )

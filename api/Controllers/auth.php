@@ -15,10 +15,6 @@ class Controllers_auth extends RestController
             return 0;
     }
 
-    public function get() {
-        return null;
-    }
-
     public function post()
     {
         if ( $this->getResourceNamePartsCount() != 1 )
@@ -55,16 +51,7 @@ class Controllers_auth extends RestController
         $this->responseStatus = 200;
     }
 
-    public function put() {
-            return null;
-    }
-
-    public function delete() {
-        return null;
-    }
-
-
-        public function checkAuth() {
+    public function checkAuth() {
         return true;
     }
 }
