@@ -26,7 +26,7 @@ class Controllers_user extends RestController
 
     public function GetUsers()
     {
-        $id        = intval($this->getRequestParamValue('id', false));
+        $id        = $this->getRequestParamValue('id', false);
 
         $from      = intval($this->getRequestParamValue('from', false));
         $count     = intval($this->getRequestParamValue('count', false));
@@ -38,7 +38,15 @@ class Controllers_user extends RestController
         $where = array();
 
         if ($id) {
-            $where[] = "`id`={$id}";
+            if (is_array($id)) {
+                foreach ($id as &$i) {
+                    $i = intval($i);
+                }
+
+                $id = implode(",", $id);
+            }
+
+            $where[] = "`id` IN ({$id})";
         }
 
         $where[] = "`deleted`={$deleted}";

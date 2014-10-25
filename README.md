@@ -359,14 +359,16 @@ Response: {
     "status": 0,
     "taskid": 1,
     "items": [
-        "id": 0,
-        "parentComment": 0,
-        "taskid": 0,
-        "text": "",
-        "created": "",
-        "createdby": 0,
-        "modified": "",
-        "modifiedby": 0
+        {
+            "id": 0,
+            "parentComment": 0,
+            "taskid": 0,
+            "text": "",
+            "created": "",
+            "createdby": 0,
+            "modified": "",
+            "modifiedby": 0
+        }
     ]
 }
 ```
