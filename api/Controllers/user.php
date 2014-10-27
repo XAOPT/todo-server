@@ -81,6 +81,10 @@ class Controllers_user extends RestController
 
         $data = $this->GetParamsFromRequestBody('create');
 
+        $result = mysql_query( "SELECT * FROM `todo_user` WHERE `email`='{$data['email']}'" ) or $this->throwMySQLError();
+        if (mysql_num_rows($result))
+            throw new Exception( 'This email is already registered', 302 );
+
         $this->insertArrayIntoDatabase('todo_user', $data);
         $id = mysql_insert_id();
 

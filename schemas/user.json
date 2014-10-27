@@ -14,7 +14,7 @@
     },
     "create" : {
         "admin" : ["*"],
-        "require" : ["firstname", "lastname", "role", "email"],
+        "require" : ["role", "email"],
         "forbidden_fields" : ["id", "vars", "clientSettings", "created", "createdby", "lastaccess", "deleted"]
     },
     "edit": {
