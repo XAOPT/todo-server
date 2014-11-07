@@ -18,7 +18,7 @@
         "modifiedby": "int"
     },
     "create" : {
-        "require" : ["project", "title"],
+        "require" : ["project", "title", "assignee"],
         "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
     },
     "edit": {
