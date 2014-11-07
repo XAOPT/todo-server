@@ -105,6 +105,10 @@ class Controllers_task extends RestController
 
         $data = $this->GetParamsFromRequestBody('create');
 
+        if (!isset($data['status'])) {
+            $data['status'] = "open";
+        }
+
         $this->insertArrayIntoDatabase('todo_task', $data);
         $id = mysql_insert_id();
 
