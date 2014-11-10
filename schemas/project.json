@@ -5,7 +5,7 @@
         "title" : "string",
         "shorttitle" : "string",
         "tagcolor" : "string",
-        "created" : "timestamp",
+        "created" : "date",
         "createdby" : "int"
     },
     "create" : {
