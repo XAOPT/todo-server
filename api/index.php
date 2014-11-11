@@ -2,15 +2,13 @@
 
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE');
+header('Access-Control-Allow-Headers: accept, content-type, cache-control, x-requested-with'); // для загрузки файлов
 
-defined('APPLICATION_PATH') || define('APPLICATION_PATH', realpath(dirname(__FILE__)));
+defined('APPLICATION_PATH') || define('APPLICATION_PATH', preg_replace('/\\\/', '/', realpath(dirname(__FILE__))));
+
 /*
 ini_set( "log_errors", "On" );
 ini_set( "error_log", "error.log" );
-
-define('APPLICATION_URL', 'http://office.divogames.ru/todo/');
-
-
 
 defined('APPLICATION_ENV')
     || define('APPLICATION_ENV', (getenv('APPLICATION_ENV') ? getenv('APPLICATION_ENV') : 'production'));

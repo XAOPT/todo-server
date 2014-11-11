@@ -292,6 +292,12 @@ Response: {
 }
 ```
 
+
+**POST task/\d+/attachment**  
+_access: administer, task.management, assignee_  
+Прикрепить файл к задаче
+
+
 **PUT task/\d+**  
 _access: administer, task.management_
 Изменить свойства существующей задачи.
@@ -336,18 +342,6 @@ _deprecated_
     “state” : “open|finished|canceled”
     “text” : “string”
 }
-
-Вложения
-=============
-Вложения это отдельные файлы, которые прицепляются к задаче.
-
-**POST task/<id>/attachment?filename&size**  
-_access: administer, task.management, assignee_  
-Body: бинарные данные (тут надо подумать а чо делать если файл большой - сколько вообще в посте передать можно?)
-
-настройка сервера  
-php_value post_max_size 20M
-
 
 Комментарии
 =============

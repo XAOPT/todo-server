@@ -179,15 +179,13 @@ class Controllers_task extends RestController
     {
         $task_id = $this->getResourceNamePart( 1 );
 
-        $filesize = intval($_GET['size']);
-
-        $file_name = mysql_real_escape_string($_GET['filename']);
-        /*$file_name = preg_replace("/[^a-zA-Z0-9\.]/", "", $file_name);
+        $file_name = mysql_real_escape_string($_FILES['file']['name']);
+        $file_name = preg_replace("/[^a-zA-Z0-9\.]/", "", $file_name);
 
         $allowed_extensions = array("doc", "txt", "rtf", "docx", "csv", "xml", "xss", "gif", "jpg", "png", "jpe", "jpeg");
 
         $file_name_arr = explode(".", $file_name);
-        $file_type     = end($file_name_arr);
+        $file_type     = strtolower(end($file_name_arr));
 
         if (!in_array(strtolower($file_type), $allowed_extensions))
         {
@@ -196,22 +194,32 @@ class Controllers_task extends RestController
             break;
         }
 
-        if (file_exists(APPLICATION_PATH.'/attachments/'.$file_name))
+        // найдём свободное имя файла
+        $free_name = false;
+        $i = 0;
+        $original_filename = $file_name;
+        while (!$free_name)
         {
-            $this->response = 'file with that name already exists';
-            $this->responseStatus = 406;
-            break;
-        }   */
+            if (file_exists(APPLICATION_PATH.'/attachments/'.$file_name))
+            {
+                $i++;
+                $file_name = $i."_".$original_filename;
+            }
+            else
+                $free_name = true;
+        }
 
-        //file_put_contents(APPLICATION_PATH.'/attachments/'.$file_name, $this->request['body']);
+        $uploaded = move_uploaded_file($_FILES['file']['tmp_name'], APPLICATION_PATH.'/../attachments/'.$file_name);
 
-        mysql_query("INSERT INTO `todo_attachment` (task, user_id, filename, size) VALUES ('{$task_id}', '{$worker}', '{$file_name}', '{$filesize}')") or $this->throwMySQLError();
-        $attach_id = mysql_insert_id();
-
-        file_put_contents(APPLICATION_PATH.'/attachments/'.$attach_id, $this->request['body']);
+        if ($uploaded)
+        {
+            $size = $_FILES['file']['size'];
+            mysql_query("INSERT INTO `todo_attachment` (task, filename, size) VALUES ('{$task_id}', '{$file_name}', '{$size}')") or $this->throwMySQLError();
+            $attach_id = mysql_insert_id();
+        }
 
         $this->response = array('id', $attach_id);
-        $this->responseStatus = 402;
+        $this->responseStatus = 200;
     }
 }
 
