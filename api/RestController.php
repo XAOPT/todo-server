@@ -21,8 +21,11 @@ abstract class RestController {
             $this->jsonbody = json_decode( $this->request['body'], true );
     }
 
-    protected function insertArrayIntoDatabase($table_name, $array)
+    protected function insertArrayIntoDatabase($table_name, $array = array())
     {
+        if (empty($array))
+            return false;
+
         $var = array();
         $val = array();
 
@@ -158,7 +161,7 @@ abstract class RestController {
         if ( !isset( $val ) )
         {
             if ( $expected )
-                throw new Exception("Bad Request: param var '{$name}' is empty", 400);
+                throw new Exception("Bad Request: param var '{$name}' is not set", 400);
             else
                 return null;
         }
@@ -267,8 +270,14 @@ abstract class RestController {
                 $expected = true;
 
             $temp = $this->getRequestBodyValue( $key, $expected );
-            if ($temp)
+
+            if ($expected && empty($temp)) {
+                throw new Exception("Bad Request: param var '{$key}' is empty", 400);
+            }
+
+            if (isset($temp)) {
                 $output[$key] = $temp;
+            }
         }
 
         $output = $this->normalizeObject($output);

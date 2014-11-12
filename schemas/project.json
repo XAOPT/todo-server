@@ -10,7 +10,7 @@
     },
     "create" : {
         "admin" : ["*"],
-        "require" : ["title"],
+        "require" : ["title", "shorttitle", "tagcolor"],
         "forbidden_fields" : ["id", "archived", "created", "createdby"]
     },
     "edit": {
