@@ -56,6 +56,7 @@ class Rest {
                 break;
             case 'delete':
                 $this->request['params'] = $_GET;
+                $this->request['body'] = file_get_contents('php://input');
                 break;
             default:
                 break;

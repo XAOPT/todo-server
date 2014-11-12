@@ -258,7 +258,7 @@ Response:
             { "id" : 1000 },
             { "id" : 1001 }
         ],
-        "attachments" : [
+        "attachments" : [  // Список вложений. Возвращается только при запросе конкретной задачи (есть id в параметрах)
               {
                   "url" : 1000,
                   "filename" : 1000,
@@ -269,7 +269,6 @@ Response:
         "startDate" : 0, // Unix timestamp
         "duration"  : 0, // целое число дней
         "deadline"  : 0, // Unix timestamp (date)
-        "rootComment": 0, //
         "created" : 0, //Unix Timestamp
         "createdby" : 0
       },
@@ -326,6 +325,17 @@ status
 _access: administer, task.management_  
 Ответ: 204? No Content  
 Удалять можно только задачи верхнего уровня (не имеющие дочек)  
+
+
+**DELETE task/attachment**  
+_access: administer, task.management, assignee_  
+Удалить прикреплённый файл
+``` json
+Request: {
+  "id": "" // id файла
+}
+```
+
 
 **[_deprecated_] GET task/\d+/oldnote**  
 Возвращает бинарник комментариев для задачи.  

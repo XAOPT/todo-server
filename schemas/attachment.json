@@ -1,0 +1,11 @@
+{
+    "param": {
+        "id" : "int",
+        "task" : "int",
+        "filename" : "string",
+        "size" : "int"
+    },
+    "create" : {
+        "require" : ["*"]
+    }
+}

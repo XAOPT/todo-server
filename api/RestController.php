@@ -186,24 +186,24 @@ abstract class RestController {
         return $this->response;
     }
 
-    protected function setSchema($scope)
+    protected function setSchema($scope = false)
     {
         if (!file_exists("../schemas/".$scope.".json") || !$scope)
             throw new Exception("Unknown schema", 400);
 
         $schema = file_get_contents("../schemas/".$scope.".json");
-        $this->schema = json_decode($schema, true);
+        $this->schema[$scope] = json_decode($schema, true);
     }
 
-    protected function getSchema($scope)
+    protected function getSchema($scope = false)
     {
         if (!$scope)
             $scope = $this->request['controller'];
 
-        if (empty($this->schema))
+        if (empty($this->schema[$scope]))
             $this->setSchema($scope);
 
-        return $this->schema;
+        return $this->schema[$scope];
     }
 
     protected function normalizeObject($data = array(), $scope = '')
@@ -232,7 +232,7 @@ abstract class RestController {
                     break;
                 case "bool":
                     $output[$key] = (bool)$value;
-                   break;
+                    break;
             }
         }
 

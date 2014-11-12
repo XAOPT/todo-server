@@ -16,7 +16,8 @@ class Controllers_task extends RestController
                 'task/\d+' => 'EditTask'
             ),
             'delete' => array(
-                'task/\d+' => 'DeleteTask'
+                'task/\d+' => 'DeleteTask',
+                'task/attachment' => 'DeleteAttachment',
             )
         );
     }
@@ -88,6 +89,22 @@ class Controllers_task extends RestController
         {
             $items[] = $this->normalizeObject( $dbtask );
         }
+
+        // если запрашивается описание какой-то одной конкретной задачи и она найдена - получим список прикреплённых файлов
+        if ($id && isset($items[0]))
+        {
+            $items[0]['attachments'] = array();
+
+            $query = mysql_query("SELECT * FROM `todo_attachment` WHERE task={$id}") or $this->throwMySQLError();
+            while( $result = mysql_fetch_array( $query ) )
+            {
+                $attachment = $this->normalizeObject( $result, 'attachment' );
+                $attachment['url'] = "/attachments/" . $attachment['filename'];
+
+                $items[0]['attachments'][] = $attachment;
+            }
+        }
+        ///////////
 
         $this->response = array(
             "status" => 0,
@@ -218,7 +235,28 @@ class Controllers_task extends RestController
             $attach_id = mysql_insert_id();
         }
 
-        $this->response = array('id', $attach_id);
+        $this->response = array(
+            "status" => 0,
+            'id' => $attach_id
+        );
+        $this->responseStatus = 200;
+    }
+
+    function DeleteAttachment()
+    {
+        $id = $this->getRequestBodyValue('id', true);
+
+        $query = mysql_query("SELECT * FROM `todo_attachment` WHERE id='{$id}'") or $this->throwMySQLError();
+        $attachment = mysql_fetch_assoc($query);
+
+        if (!empty($attachment)) {
+            unlink(APPLICATION_PATH.'/../attachments/'.$attachment['filename']);
+            mysql_query("DELETE FROM `todo_attachment` WHERE id='{$id}'");
+        }
+
+        $this->response = array(
+            "status" => 0
+        );
         $this->responseStatus = 200;
     }
 }
