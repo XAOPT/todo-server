@@ -35,12 +35,26 @@ class Controllers_project extends RestController
             throw new Exception( 'Not Found', 404 );
     }
 
-    // project [GET]: Return all projects.
+
     public function ProjectList()
     {
+        // условия поиска
+        $archived = intval($this->getRequestParamValue('archived', false));
+
+        $where = array();
+
+        $where[] = "`archived`={$archived}";
+
+        if (empty($where))
+            $where[] = "1=1";
+
+        $where = implode(" AND ", $where);
+
+        ///
+
         $projects = array();
 
-        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project`" ) or $this->throwMySQLError();
+        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project` WHERE {$where}" ) or $this->throwMySQLError();
         while( $db_project = mysql_fetch_array( $query ) )
         {
             $projects[] = $this->normalizeObject( $db_project );

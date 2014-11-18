@@ -205,11 +205,7 @@ class Controllers_task extends RestController
         $file_type     = strtolower(end($file_name_arr));
 
         if (!in_array(strtolower($file_type), $allowed_extensions))
-        {
-            $this->response = 'file type is not allowed';
-            $this->responseStatus = 406;
-            break;
-        }
+            throw new Exception("file type is not allowed", 406);
 
         // найдём свободное имя файла
         $free_name = false;
