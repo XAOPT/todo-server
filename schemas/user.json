@@ -7,7 +7,7 @@
         "lastname" : "string",
         "vars" : "string",
         "clientSettings" : "string",
-        "created" : "timestamp",
+        "created" : "date",
         "createdby" : "int",
         "lastaccess" : "timestamp",
         "deleted" : "bool"

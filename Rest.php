@@ -36,6 +36,8 @@ class Rest {
     {
         $resource = parse_url($_SERVER['REQUEST_URI']);
 
+        $resource['path'] = preg_replace('/\/todo-server/', '', $resource['path']); // костыль для продакшен-версии
+
         $this->request['route']    = trim($resource['path'], '/');
         $this->request['resource'] = explode( '/', $this->request['route'] );
         $this->request['method']   = strtolower($_SERVER['REQUEST_METHOD']);

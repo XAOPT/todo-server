@@ -191,10 +191,10 @@ abstract class RestController {
 
     protected function setSchema($scope = false)
     {
-        if (!file_exists("../schemas/".$scope.".json") || !$scope)
+        if (!file_exists("schemas/".$scope.".json") || !$scope)
             throw new Exception("Unknown schema", 400);
 
-        $schema = file_get_contents("../schemas/".$scope.".json");
+        $schema = file_get_contents("schemas/".$scope.".json");
         $this->schema[$scope] = json_decode($schema, true);
     }
 
