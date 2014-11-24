@@ -3,6 +3,10 @@
         "day" : "int",
         "userid" : "int",
         "taskid" : "int",
-        "worktimeSeconds" : "int"
+        "worktimeSeconds" : "int",
+        "comment" : "string"
+    },
+    "edit": {
+        "require" : ["userid","taskid", "worktimeSeconds", "day"]
     }
 }

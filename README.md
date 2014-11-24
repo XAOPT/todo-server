@@ -468,7 +468,8 @@ Request: {
   "day": 15000,
   "userid" : 22, // опционально
   "taskid" : 30,
-  "worktimeSeconds" : 1000
+  "worktimeSeconds" : 1000,
+  "comment": ""
 }
 ```
 Залогиненый юзер должен быть либо assignee задачи, либо менеджером с пермишном task.management

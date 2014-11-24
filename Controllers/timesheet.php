@@ -77,18 +77,24 @@ class Controllers_timesheet extends RestController
 
     public function EditTimesheet()
     {
-        $userid  = intval($this->getRequestBodyValue('userid', false));
-        $day = intval($this->getRequestBodyValue('day', true));
-        $taskid = intval($this->getRequestBodyValue('taskid', true));
-        $worktimeSeconds = intval($this->getRequestBodyValue('worktimeSeconds', true));
+        $data = $this->GetParamsFromRequestBody('edit');
 
         $controllers_task = new Controllers_task($this->request);
-        $sheets = $controllers_task->checkTaskExists($taskid);
+        $sheets = $controllers_task->checkTaskExists($data['taskid']);
 
         // TODO: если не задан юзерайди, то приравнять его к текущему юзеру
 
-        if ($worktimeSeconds>0)
-            mysql_query("INSERT INTO `todo_timesheet` (day, userid, taskid, worktimeSeconds) VALUES ({$day}, {$userid}, {$taskid}, {$worktimeSeconds}) ON DUPLICATE KEY UPDATE worktimeSeconds={$worktimeSeconds};") or $this->throwMySQLError();
+        if ($data['worktimeSeconds'] > 0)
+        {
+            if (!isset($data['comment']))
+                $data['comment'] = '';
+
+            mysql_query("
+                INSERT INTO `todo_timesheet` (day, userid, taskid, worktimeSeconds, comment)
+                VALUES ({$data['day']}, {$data['userid']}, {$data['taskid']}, {$data['worktimeSeconds']}, '{$data['comment']}')
+                ON DUPLICATE KEY UPDATE worktimeSeconds={$data['worktimeSeconds']}, comment='{$data['comment']}'"
+            ) or $this->throwMySQLError();
+        }
         else
             mysql_query("DELETE FROM `todo_timesheet` WHERE day='{$day}' AND userid='{$userid}' AND taskid='{$taskid}'") or $this->throwMySQLError();
 
