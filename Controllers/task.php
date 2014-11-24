@@ -35,9 +35,9 @@ class Controllers_task extends RestController
         $project   = $this->getRequestParamValue('project', false);
         $title     = $this->getRequestParamValue('title', false);
         $text      = $this->getRequestParamValue('text', false);
-        $assignee  = intval($this->getRequestParamValue('assignee', false));
+        $assignee  = $this->getRequestParamValue('assignee', false);
         $status    = $this->getRequestParamValue('status', false);
-        $priority  = intval($this->getRequestParamValue('priority', false));
+        $priority  = $this->getRequestParamValue('priority', false);
         $timesheet_from = intval($this->getRequestParamValue('timesheet_from', false));
         $timesheet_to   = intval($this->getRequestParamValue('timesheet_to', false));
         $parent    = intval($this->getRequestParamValue('parent', false));
@@ -64,14 +64,28 @@ class Controllers_task extends RestController
             $where[] = "`text` LIKE '%{$text}%'";
         }
         if ($assignee) {
-            $where[] = "`assignee`={$assignee}";
+            if (is_array($assignee)) {
+                $assignee = implode(",", array_map('intval', $assignee));
+                $where[] = "`assignee` IN ({$assignee})";
+            }
+            else {
+                $assignee = intval($assignee);
+                $where[] = "`assignee`={$assignee}";
+            }
         }
         if ($status) {
-            $status = implode("','",$status);
+            $status = implode("','", $status);
             $where[] = "`status` IN ('{$status}')";
         }
         if ($priority) {
-            $where[] = "`priority`={$priority}";
+            if (is_array($priority)) {
+                $priority = implode(",", array_map('intval', $priority));
+                $where[] = "`priority` IN ({$priority})";
+            }
+            else {
+                $priority = intval($priority);
+                $where[] = "`priority`={$priority}";
+            }
         }
         if ($parent) {
             $where[] = "`parentTask`={$parent}";

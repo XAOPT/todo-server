@@ -162,6 +162,9 @@ Response: {
 }
 ```
 
+**GET user/\d+/clientSettings**  
+Настройки клиента пользователя 
+
 **POST user**  
 _access: administer, people.management_  
 Создание пользователя
@@ -186,6 +189,15 @@ email
 firstname
 lastname
 deleted  
+
+**PUT user/\d+/clientSettings**  
+Изменение настроек клиента пользователя
+``` json
+Request:
+{
+    "param1": "" // произвольный JSON
+}
+```
 
 **PUT user/\d+/projectrole**  
 _access: administer, people.management_  
@@ -292,9 +304,9 @@ Response:
         "project"  : "", //айдишник проекта к которому относится таск. ~projid
         "type"     : "task, milestone, folder, issue, feature, testcase",  // (ENUM)
         "title"    : "My super task.",
-        "priority" : 0, // (TINYINT)
+        "priority" : [0,1], // инт или массив интов
         "status"   : "open, inprogress, finished, reopened, closed, canceled", // (ENUM)
-        "assignee" : 10, // юзер, которому назначена задача. ~uid
+        "assignee" : [10,11], // юзер, которому назначена задача. инт или массив интов
         "parentTask" : 10, // айдишник родительской задачи или 0
         "sub-tasks" : [
             { "id" : 1000 },

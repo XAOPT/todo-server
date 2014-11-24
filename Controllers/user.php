@@ -6,13 +6,15 @@ class Controllers_user extends RestController
     {
         return array(
             'get' => array(
-                'user' => 'GetUsers'
+                'user' => 'GetUsers',
+                'user/\d+/clientSettings' => 'getClientSettings',
             ),
             'post' => array(
                 'user' => 'CreateUser'
             ),
             'put' => array(
-                'user/\d+'   => 'EditUser'
+                'user/\d+'   => 'EditUser',
+                'user/\d+/clientSettings' => 'clientSettings'
             )
         );
     }
@@ -122,6 +124,45 @@ class Controllers_user extends RestController
         );
 
         $this->responseStatus = 202; // accepted
+    }
+
+    public function getClientSettings() {
+        $user_id = $this->getResourceNamePart( 1 );
+
+        $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
+        $temp = mysql_fetch_array($query);
+
+        $clientSettings = json_decode($temp[0], true);
+
+        $this->response = array(
+            "status" => 0,
+            "clientSettings" => $clientSettings
+        );
+        $this->responseStatus = 200;
+    }
+
+    public function clientSettings()
+    {
+        $user_id = $this->getResourceNamePart( 1 );
+
+        $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
+        $temp = mysql_fetch_array($query);
+
+        $clientSettings = json_decode($temp[0], true);
+
+        foreach ($this->jsonbody as $key => $value) {
+            $clientSettings[$key] = $value;
+        }
+
+        $clientSettings = json_encode($clientSettings);
+
+
+        mysql_query("UPDATE `todo_user` SET clientSettings='{$clientSettings}' WHERE id={$user_id}") or $this->throwMySQLError();
+
+        $this->response = array(
+            "status" => 0
+        );
+        $this->responseStatus = 200;
     }
 
     /* ------------------------------------------------------ */

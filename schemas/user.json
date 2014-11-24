@@ -6,7 +6,6 @@
         "firstname" : "string",
         "lastname" : "string",
         "vars" : "string",
-        "clientSettings" : "string",
         "created" : "date",
         "createdby" : "int",
         "lastaccess" : "timestamp",
