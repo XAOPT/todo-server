@@ -74,11 +74,8 @@ class Controllers_auth extends RestController
 
         $data = json_decode($data, true);
 
-        if (!$data || !isset($data['id']) || $signed_id != $data['id']) {
-            $this->response = array("status" => 1);
-            $this->responseStatus = 400;
-            return;
-        }
+        if (!$data || !isset($data['id']) || $signed_id != $data['id'])
+            throw new Exception( 'Not Found', 404 );
 
         $query = mysql_query( "SELECT * FROM `todo_user` WHERE fbid='{$data['id']}'" ) or $this->throwMySQLError();
 
@@ -129,9 +126,7 @@ class Controllers_auth extends RestController
         }
 
         // ничего не нашлось - вернём ошибку
-        $this->response = array('status' => 1);
-        $this->responseStatus = 200;
-        return;
+        throw new Exception( 'Not Found', 404 );
     }
 
     public function Auth()
@@ -150,9 +145,8 @@ class Controllers_auth extends RestController
                 'userid' => $user['id']
             );
         }
-        else {
-            $this->response = array('status' => 1);
-        }
+        else
+            throw new Exception( 'Not Found', 404 );
 
         $this->responseStatus = 200;
     }
