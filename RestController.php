@@ -21,6 +21,37 @@ abstract class RestController {
             $this->jsonbody = json_decode( $this->request['body'], true );
     }
 
+    public function checkAuth()
+    {
+        $auth_token = mysql_real_escape_string($this->request['params']['auth_token']);
+        $userid     = intval($this->request['params']['session_user']);
+
+        if ( !isset( $auth_token ) || !isset($userid) )
+            return false;
+
+        $query = mysql_query( "SELECT * FROM `todo_session` WHERE auth_token='$auth_token' AND userid={$userid}" ) or $this->throwMySQLError();
+        if ( $session = mysql_fetch_array( $query ) )
+        {
+            // юзер под которым вошли в систему.
+            $this->loggedUser = User::createFromDatabase( (int)$session['userid'] );
+            //if ( !isset( $this->loggedUser ) || !$this->loggedUser->hasPermission( 'system.access' ) )
+            if ( !isset( $this->loggedUser ))
+            {
+                $this->dropSessionByAuthToken( $auth_token );
+                return false;
+            }
+
+            return $this->loggedUser->getId();
+        }
+
+        return false;
+    }
+
+    protected function dropSessionByAuthToken( $auth_token )
+    {
+        mysql_query( "DELETE FROM `todo_session` WHERE auth_token='{$auth_token}'" );
+    }
+
     protected function insertArrayIntoDatabase($table_name, $array = array())
     {
         if (empty($array))
@@ -90,44 +121,6 @@ abstract class RestController {
 
         return $sets;
     }*/
-
-    public function checkAuth()
-    {
-        return true;
-
-        $auth_token = $this->request['params']['auth_token'];
-        if ( !isset( $auth_token ) )
-            return FALSE;
-
-        $query = mysql_query( "SELECT * FROM `session` WHERE auth_token='$auth_token'" ) or $this->throwMySQLError();
-        if ( $session = mysql_fetch_array( $query ) )
-        {
-            // если сменился айпишник, то оборвем сессию.
-            $ipaddr = (string)$_SERVER['REMOTE_ADDR'];
-            if ( $ipaddr != $session['ipaddr'] )
-            {
-                $this->dropSessionByAuthToken( $auth_token );
-                return false;
-            }
-
-            // юзер под которым вошли в систему.
-            $this->loggedUser = User::createFromDatabase( (int)$session['user_id'] );
-            if ( !isset( $this->loggedUser ) || !$this->loggedUser->hasPermission( 'system.access' ) )
-            {
-                $this->dropSessionByAuthToken( $auth_token );
-                return false;
-            }
-
-            return $this->loggedUser->getId();
-        }
-
-        return false;
-    }
-
-    protected function dropSessionByAuthToken( $auth_token )
-    {
-        mysql_query( "DELETE FROM `session` WHERE auth_token='$auth_token'" );
-    }
 
     protected function getResourceNamePartsCount()
     {

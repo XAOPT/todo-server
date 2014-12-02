@@ -32,6 +32,7 @@ class User
         LEFT JOIN `todo_role` AS r ON (r.sysname = u.role)
         WHERE u.id='{$id}'
         ";
+
         $query = mysql_query( $q );
         if ( !isset($query) )
             return;
