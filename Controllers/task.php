@@ -236,7 +236,7 @@ class Controllers_task extends RestController
                 $free_name = true;
         }
 
-        $uploaded = move_uploaded_file($_FILES['file']['tmp_name'], APPLICATION_PATH.'/../attachments/'.$file_name);
+        $uploaded = move_uploaded_file($_FILES['file']['tmp_name'], APPLICATION_PATH.'/attachments/'.$file_name);
 
         if ($uploaded)
         {
@@ -260,7 +260,7 @@ class Controllers_task extends RestController
         $attachment = mysql_fetch_assoc($query);
 
         if (!empty($attachment)) {
-            unlink(APPLICATION_PATH.'/../attachments/'.$attachment['filename']);
+            unlink(APPLICATION_PATH.'/attachments/'.$attachment['filename']);
             mysql_query("DELETE FROM `todo_attachment` WHERE id='{$id}'");
         }
 
