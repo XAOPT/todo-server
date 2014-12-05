@@ -6,7 +6,8 @@ class Controllers_timesheet extends RestController
     {
         return array(
             'get' => array(
-                'timesheet' => 'GetTimesheet'
+                'timesheet' => 'GetTimesheet',
+                'timesheet/\d+/summary' => 'GetSummaryTimesheet'
             ),
             'put' => array(
                 'timesheet' => 'EditTimesheet'
@@ -72,6 +73,32 @@ class Controllers_timesheet extends RestController
         }
 
         $this->response["items"] = $items;
+        $this->responseStatus = 200;
+    }
+
+    public function GetSummaryTimesheet()
+    {
+        $userid = intval($this->getResourceNamePart( 1 ));
+
+        $from   = intval($this->getRequestParamValue('from', true));
+        $count  = intval($this->getRequestParamValue('count', true));
+
+        $to = $from + $count;
+
+        $items = array();
+        $query = mysql_query("SELECT SUM(worktimeSeconds) AS worktimeSeconds, day FROM `todo_timesheet` WHERE `userid`={$userid} AND `day`>={$from} AND `day`<{$to} GROUP BY day") or $this->throwMySQLError();
+
+        while( $row = mysql_fetch_assoc( $query ) )
+        {
+            $items[] = $row;
+        }
+
+        $this->response = array(
+            "status" => 0,
+            "from"  => $from,
+            "count" => $count,
+            "items" => $items
+        );
         $this->responseStatus = 200;
     }
 

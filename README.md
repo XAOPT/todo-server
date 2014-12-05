@@ -457,7 +457,7 @@ text
 
 Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
 
-**GET timesheet?userid&taskid&dayfrom&dayto**
+**GET timesheet?userid&taskid&from&count**
 ``` json
 Response: {
   "status": 0,
@@ -470,6 +470,22 @@ Response: {
     }
   ]
 
+}
+```
+
+**GET timesheet/\d+/summary?from&count**  
+Возвращает сумму потраченных часов на все задачи в заданном диапазоне дней. Для пользователя \d+
+``` json
+Response: {
+  "status": 0,
+  "from": 0,
+  "count": 0,
+  "items": [
+    { 
+      "day" : 15275, 
+      "worktimeSeconds" : 3600 
+    }
+  ]
 }
 ```
 
