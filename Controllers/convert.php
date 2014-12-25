@@ -109,7 +109,7 @@ class Controllers_convert extends RestController
 
             if ($d['notes']) {
                 $comment = array(
-                    'parentTask' => $data['id'],
+                    'taskid' => $data['id'],
                     'text' => trim($this->rtf2text($d['notes'])),
                     'created' => $data['created']
                 );
