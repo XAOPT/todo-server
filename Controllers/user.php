@@ -132,7 +132,7 @@ class Controllers_user extends RestController
         $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
         $temp = mysql_fetch_array($query);
 
-        $clientSettings = json_decode($temp[0], true);
+        $clientSettings = ($temp[0])?json_decode($temp[0], true):array();
 
         $this->response = array(
             "status" => 0,
