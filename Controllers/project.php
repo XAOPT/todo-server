@@ -80,7 +80,7 @@ class Controllers_project extends RestController
 
         $this->response = array(
             "status" => 0,
-            "item" => $this->normalizeObject( $db_project )
+            "items" => array($this->normalizeObject( $db_project ))
         );
 
         $this->responseStatus = 200;
