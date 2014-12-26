@@ -21,7 +21,7 @@ class User
     {
         $this->dbuser = $object;
 
-        $this->permissions = json_decode( $object['permissions'], true );
+        $this->permissions = isset($object['permissions'])?json_decode( $object['permissions'], true ):array();
     }
 
     public static function createFromDatabase( $id )
@@ -29,7 +29,7 @@ class User
         $q = "
         SELECT *
         FROM `todo_user` AS u
-        LEFT JOIN `todo_role` AS r ON (r.sysname = u.role)
+        LEFT JOIN `todo_role` AS r ON (r.role_id = u.role)
         WHERE u.id='{$id}'
         ";
 
@@ -87,7 +87,7 @@ class User
         }
     }
 
-    public function hasPermission($perm)
+    public function hasPermission($perm = '')
     {
         // если есть админские права, то это разрешает всё.
         if ( in_array( User::PERMISSION_ADMINISTER, $this->permissions ) )

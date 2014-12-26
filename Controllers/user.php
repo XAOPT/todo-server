@@ -7,14 +7,14 @@ class Controllers_user extends RestController
         return array(
             'get' => array(
                 'user' => 'GetUsers',
-                'user/\d+/clientSettings' => 'getClientSettings',
+                'user/clientSettings' => 'getClientSettings',
             ),
             'post' => array(
                 'user' => 'CreateUser'
             ),
             'put' => array(
                 'user/\d+'   => 'EditUser',
-                'user/\d+/clientSettings' => 'clientSettings'
+                'user/\d+/clientSettings' => 'setClientSettings'
             )
         );
     }
@@ -79,9 +79,8 @@ class Controllers_user extends RestController
 
     public function CreateUser()
     {
-        ## user [POST]: Creates new user.
-        /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
-            $this->throwForbidden();*/
+        if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
+            $this->throwForbidden();
 
         $data = $this->GetParamsFromRequestBody('create');
 
@@ -101,10 +100,6 @@ class Controllers_user extends RestController
 
     public function EditUser()
     {
-        ## user/<id> [PUT]: Modifies the specified user.
-        /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ))
-            $this->throwForbidden();*/
-
         $user_id = $this->getResourceNamePart( 1 );
 
         $this->checkUserExists($user_id);
@@ -114,9 +109,11 @@ class Controllers_user extends RestController
         if ($role == 'admin' && !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ))
             $this->throwForbidden();*/
 
-        $data = $this->GetParamsFromRequestBody('edit');
+        $is_owner = $this->loggedUser->getId() == $user_id;
 
-        $this->UpdateDatabaseFromArray('todo_user', $data, "id='{$user_id}'");
+        $data = $this->GetParamsFromRequestBody('edit', $is_owner);
+
+        $this->UpdateDatabaseFromArray('todo_user', $data, "id={$user_id}");
 
         $this->response = array(
             "status" => 0,
@@ -126,8 +123,9 @@ class Controllers_user extends RestController
         $this->responseStatus = 202; // accepted
     }
 
-    public function getClientSettings() {
-        $user_id = $this->getResourceNamePart( 1 );
+    public function getClientSettings()
+    {
+        $user_id = $this->loggedUser->getId();
 
         $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
         $temp = mysql_fetch_array($query);
@@ -141,9 +139,9 @@ class Controllers_user extends RestController
         $this->responseStatus = 200;
     }
 
-    public function clientSettings()
+    public function setClientSettings()
     {
-        $user_id = $this->getResourceNamePart( 1 );
+        $user_id = $this->loggedUser->getId();
 
         $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
         $temp = mysql_fetch_array($query);

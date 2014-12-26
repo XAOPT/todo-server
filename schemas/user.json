@@ -12,17 +12,23 @@
         "deleted" : "bool"
     },
     "create" : {
-        "admin" : ["*"],
+        "access": {
+            "people.management" : ["*"]
+        },
         "require" : ["role", "email"],
         "forbidden_fields" : ["id", "vars", "clientSettings", "created", "createdby", "lastaccess", "deleted"]
     },
     "edit": {
-        "admin" : ["email", "role", "firstname", "lastname", "vars", "clientSettings","deleted"],
-        "manager" : ["email", "firstname", "lastname", "vars", "clientSettings","deleted"],
-        "owner" : ["email", "password", "firstname", "lastname", "vars", "clientSettings"]
+        "access": {
+            "people.management" : ["firstname", "lastname", "vars", "deleted"],
+            "owner" : ["email", "firstname", "lastname", "vars"]
+        },
+        "forbidden_fields" : ["id", "created", "createdby", "lastaccess", "role"]
     },
     "edit_password": {
-        "admin" : ["password"],
-        "owner" : ["password"]
+        "access": {
+            "administer" : ["password"],
+            "owner" : ["password"]
+        }
     }
 }

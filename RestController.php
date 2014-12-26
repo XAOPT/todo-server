@@ -235,7 +235,7 @@ abstract class RestController {
         return $output;
     }
 
-    protected function GetParamsFromRequestBody($action = '', $scope = '')
+    protected function GetParamsFromRequestBody($action = '', $is_owner = false)
     {
         // получим схему
         $schema = $this->getSchema($scope);
@@ -243,12 +243,36 @@ abstract class RestController {
         if (!$action || !isset($schema[$action]))
             throw new Exception("GetParamsFromRequestBody issue", 400);
 
-        // если данное действие не разрешает правиь какие-то поля - убираем их
+        // если данное действие не разрешает править какие-то поля - убираем их
         $param = $schema['param'];
 
         if (isset($schema[$action]['forbidden_fields']) && count($schema[$action]['forbidden_fields']))
         foreach ($schema[$action]['forbidden_fields'] as $key) {
             unset($param[$key]);
+        }
+
+        // если есть разграничения по уровню доступа - проверим их. Если админ, то ему можно всё
+        if (isset($schema[$action]['access']) && count($schema[$action]['access']) && !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER )) {
+
+            $acceptable_fields = array();
+            foreach ($schema[$action]['access'] as $permission => $fields)
+            {
+                if (($permission == "owner" && $is_owner == true) || $this->loggedUser->hasPermission( $permission ))
+                {
+                    if (count($fields) == 1 && $fields[0] == "*")
+                        $fields = array_keys($param);
+
+                    $acceptable_fields = array_merge($acceptable_fields, $fields);
+                }
+            }
+
+            if (empty($acceptable_fields))
+                $this->throwForbidden();
+
+            foreach ($param as $key => $value) {
+                if (!in_array($key, $acceptable_fields))
+                    unset($param[$key]);
+            }
         }
 
         // получим взодящие параметры
@@ -276,6 +300,11 @@ abstract class RestController {
         $output = $this->normalizeObject($output);
 
         return $output;
+    }
+
+    protected function throwForbidden()
+    {
+        throw new Exception( 'Forbidden action', 403 );
     }
 
     abstract public function routes();

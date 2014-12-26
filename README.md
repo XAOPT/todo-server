@@ -162,7 +162,7 @@ Response: {
 }
 ```
 
-**GET user/\d+/clientSettings**  
+**GET user/clientSettings**  
 Настройки клиента пользователя 
 
 **POST user**  
@@ -190,7 +190,7 @@ firstname
 lastname
 deleted  
 
-**PUT user/\d+/clientSettings**  
+**PUT user/clientSettings**  
 Изменение настроек клиента пользователя
 ``` json
 Request:
