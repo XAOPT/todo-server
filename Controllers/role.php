@@ -2,127 +2,112 @@
 
 class Controllers_role extends RestController
 {
-    public static function createRoleFromDatabaseObject( $dbobj )
+    public function routes()
     {
-        if ( !isset( $dbobj ) )
-            return null;
+        return array(
+            'get' => array(
+                'role' => 'GetRole'
+            ),
+            'post' => array(
+                'role' => 'CreateRole'
+            ),
+            'put' => array(
+                'role/\d+' => 'EditRole'
+            ),
+            'delete' => array(
+                'role/\d+' => 'DeleteRole'
+            )
+        );
+    }
 
-        $role = array(
-            'class'       => 'role',
-            'id'          => (int)$dbobj['id'],
-            'sysrole'     => (bool)$dbobj['sysrole'],
-            'sysname'     => (string)$dbobj['sysname'],
-            'name'        => (string)$dbobj['name'],
-            'permissions' => json_decode( $dbobj['permissions'], true ),
+    public function checkRoleExists($id = 0)
+    {
+        $result = mysql_query( "SELECT * FROM `todo_role` WHERE id={$id}" ) or $this->throwMySQLError();
+        if (!mysql_num_rows($result))
+            throw new Exception( 'Not Found', 404 );
+    }
+
+    public function isSysRole($id = 0)
+    {
+        $result = mysql_query( "SELECT sysrole FROM `todo_user` WHERE id={$id}" ) or $this->throwMySQLError();
+        $role = mysql_fetch_array($result);
+
+        if (isset($role[0]) && $role[0] == 0)
+            return false;
+        else
+            return true;
+    }
+
+    public function GetRole()
+    {
+        $items = array();
+        $query = mysql_query("SELECT * FROM `todo_role`") or $this->throwMySQLError();
+
+        while( $obj = mysql_fetch_array( $query ) )
+        {
+            $items[] = $this->normalizeObject( $obj );
+        }
+
+        $this->response = array(
+            "status" => 0,
+            "items" => $items
+        );
+        $this->responseStatus = 200;
+    }
+
+    public function CreateRole()
+    {
+        $data = $this->GetParamsFromRequestBody('create');
+
+        $this->insertArrayIntoDatabase('todo_role', $data);
+        $id = mysql_insert_id();
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
+        );
+        $this->responseStatus = 201;
+    }
+
+    public function EditRole()
+    {
+        $id = $this->getResourceNamePart( 1 );
+
+        $this->checkRoleExists($id);
+
+        $data = $this->GetParamsFromRequestBody('edit');
+
+        $this->UpdateDatabaseFromArray('todo_role', $data, "id={$id}");
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
         );
 
-        return $role;
+        $this->responseStatus = 202; // accepted
     }
 
-    public function get()
+    public function DeleteRole()
     {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            case 1:
-                ## role [GET]: Returns list of all system roles.
-                $roles = array( 'class' => 'userRoleList' );
-
-                $items = array();
-                $query = mysql_query( "SELECT * FROM `todo_role`" ) or $this->throwMySQLError();
-                while( $db_role = mysql_fetch_array( $query ) )
-                {
-                    $role = $this->createRoleFromDatabaseObject( $db_role );
-                    if ( $role != null )
-                        $items[] = $role;
-                }
-
-                $roles['items'] = $items;
-
-                $this->response = $roles;
-                $this->responseStatus = 200;
-                break;
-        }
-
-        return null;
-    }
-
-    public function post()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            ## role [POST]: Creates new role with the specified system name.
-            case 1:
-                if ( !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ) )
-                    $this->throwForbidden();
-
-                $sysname = $this->getRequestBodyValue( 'sysname' );
-                $sysrole = (int)$this->getRequestBodyValue( 'sysrole', false );
-
-                mysql_query( "INSERT INTO `todo_role` (`sysname`,`sysrole`) VALUES('$sysname',$sysrole)" ) or $this->throwMySQLError();
-                $id = mysql_insert_id();
-
-                $this->response = array('id'=>$id);
-                $this->responseStatus = 201; // created
-
-                break;
-        }
-
-        return null;
-    }
-
-    public function put()
-    {
-        switch ( $this->getResourceNamePartsCount() )
-        {
-            ## role/<id> [PUT]: Modifies the role.
-            case 2:
-                if ( !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ) )
-                    $this->throwForbidden();
-
-                $role_id = (int)$this->getResourceNamePart( 1 );
-
-                $editable_columns = array(
-                    'permissions' => 'permissions',
-                    'name'        => 'name'
-                );
-
-                $sets = $this->GetEditablesFromBody($editable_columns);
-                $sets = implode(',', $sets);
-
-                if ($sets)
-                    mysql_query( "UPDATE `todo_role` SET {$sets} WHERE role_id='{$role_id}'" ) or $this->throwMySQLError();
-
-                $this->response = 'ok'; // accepted
-                $this->responseStatus = 202; // accepted
-                break;
-        }
-
-        return null;
-    }
-
-    public function delete()
-    {
-        ## role/<id> [DELETE] system role delete
-        $role_id = (int)$this->getResourceNamePart( 1 );
-
-        $query = mysql_query("SELECT * FROM `todo_role` WHERE role_id='{$role_id}'");
-        $role = mysql_fetch_array($query);
-
-        if ( !$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ) || $role['sysname'] == 'admin')
+        if (!$this->loggedUser->hasPermission( User::PERMISSION_ADMINISTER ))
             $this->throwForbidden();
 
-        if ($role['sysrole'] == 1)
-            mysql_query("UPDATE `todo_user` SET role='' WHERE role='{$role['sysname']}'");
-        else
-        {
-            mysql_query("UPDATE `todo_user` SET def_prole='' WHERE def_prole='{$role['sysname']}'");
-            mysql_query("DELETE FROM `todo_prole` WHERE role='{$role['sysname']}'");
-        }
+        $id = $this->getResourceNamePart( 1 );
 
-        mysql_query("DELETE FROM `todo_role` WHERE role='{$role['sysname']}'");
+        $this->checkRoleExists($id);
 
-        $this->response = 'ok';
-        $this->responseStatus = 202;
+        // системные роли нельзя редактировать
+        if ($this->isSysRole($id))
+            $this->throwForbidden();
+
+        mysql_query("DELETE FROM `todo_role` WHERE id={$id} AND sysrole=0") or $this->throwMySQLError();
+
+        mysql_query("UPDATE `todo_user` SET role=0 WHERE role=0") or $this->throwMySQLError();
+
+        $this->response = array(
+            "status" => 0,
+            "id" => $id
+        );
     }
 }
 

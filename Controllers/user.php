@@ -79,9 +79,6 @@ class Controllers_user extends RestController
 
     public function CreateUser()
     {
-        if ( !$this->loggedUser->hasPermission( User::PERMISSION_PEOPLE_MANAGEMENT ) )
-            $this->throwForbidden();
-
         $data = $this->GetParamsFromRequestBody('create');
 
         $result = mysql_query( "SELECT * FROM `todo_user` WHERE `email`='{$data['email']}'" ) or $this->throwMySQLError();

@@ -1,0 +1,21 @@
+{
+    "param": {
+        "id" : "int",
+        "sysname" : "string",
+        "sysrole" : "int",
+        "name" : "string"
+    },
+    "create" : {
+        "access": {
+            "administer" : ["*"]
+        },
+        "require" : ["sysname", "name"],
+        "forbidden_fields" : ["id", "sysrole"]
+    },
+    "edit": {
+        "access": {
+            "administer" : ["*"]
+        },
+        "forbidden_fields" : ["id", "sysrole"]
+    }
+}
