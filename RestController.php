@@ -288,7 +288,7 @@ abstract class RestController {
 
             $temp = $this->getRequestBodyValue( $key, $expected );
 
-            if ($expected && empty($temp)) {
+            if ($expected && !isset($temp)) {
                 throw new Exception("Bad Request: param var '{$key}' is empty", 400);
             }
 

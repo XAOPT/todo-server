@@ -110,7 +110,6 @@ class Controllers_timesheet extends RestController
         $sheets = $controllers_task->checkTaskExists($data['taskid']);
 
         // TODO: если не задан юзерайди, то приравнять его к текущему юзеру
-
         if ($data['worktimeSeconds'] > 0)
         {
             if (!isset($data['comment']))
@@ -123,7 +122,7 @@ class Controllers_timesheet extends RestController
             ) or $this->throwMySQLError();
         }
         else
-            mysql_query("DELETE FROM `todo_timesheet` WHERE day='{$day}' AND userid='{$userid}' AND taskid='{$taskid}'") or $this->throwMySQLError();
+            mysql_query("DELETE FROM `todo_timesheet` WHERE day={$data['day']} AND userid={$data['userid']} AND taskid={$data['taskid']}") or $this->throwMySQLError();
 
         $this->response = array(
             "status" => 0
