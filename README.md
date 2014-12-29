@@ -57,13 +57,10 @@ DELETE - запрос на удаление ресурса. Использует
  ``` json
 Response: 
 {
-    "class": "userRoleList",
     "items": [
         {
-            "class": "role",
             "id": 1,
             "sysrole": true,
-            "sysname": "admin",
             "name": "Администратор",
             "permissions": [
                 "system.access",
@@ -80,8 +77,9 @@ _access: administer_
 Создаёт новую роль  
 ``` json
 Request: {
-  sysname,
-  sysrole
+  name,
+  sysrole,
+  permissions
 }
 Response: {
   id : 100

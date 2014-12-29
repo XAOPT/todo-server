@@ -6,7 +6,8 @@ class Controllers_role extends RestController
     {
         return array(
             'get' => array(
-                'role' => 'GetRole'
+                'role' => 'GetRole',
+                'role/\d+' => 'GetRole',
             ),
             'post' => array(
                 'role' => 'CreateRole'
@@ -29,7 +30,7 @@ class Controllers_role extends RestController
 
     public function isSysRole($id = 0)
     {
-        $result = mysql_query( "SELECT sysrole FROM `todo_user` WHERE id={$id}" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT sysrole FROM `todo_role` WHERE id={$id}" ) or $this->throwMySQLError();
         $role = mysql_fetch_array($result);
 
         if (isset($role[0]) && $role[0] == 0)
@@ -38,10 +39,15 @@ class Controllers_role extends RestController
             return true;
     }
 
-    public function GetRole()
+    public function GetRole($role_id = null)
     {
+        if (!isset($role_id))
+            $role_id = intval($this->getResourceNamePart( 1 ));
+
+        $where = $role_id > 0?" WHERE id={$role_id}":'';
+
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_role`") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `todo_role` {$where}") or $this->throwMySQLError();
 
         while( $obj = mysql_fetch_array( $query ) )
         {
@@ -74,6 +80,9 @@ class Controllers_role extends RestController
         $id = $this->getResourceNamePart( 1 );
 
         $this->checkRoleExists($id);
+
+        if ($this->isSysRole($id))
+            $this->throwForbidden();
 
         $data = $this->GetParamsFromRequestBody('edit');
 

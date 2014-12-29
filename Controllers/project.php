@@ -18,16 +18,6 @@ class Controllers_project extends RestController
         );
     }
 
-    public function getProjectFromDatabase( $proj_id = 0 )
-    {
-        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project` WHERE `id`='$proj_id'" ) or $this->throwMySQLError();
-
-        if ( $project = mysql_fetch_array( $query ) )
-            return $project;
-
-        return null;
-    }
-
     public function checkProjectExists($project_id = 0)
     {
         $result = mysql_query( "SELECT * FROM `todo_project` WHERE id='{$project_id}'" ) or $this->throwMySQLError();
@@ -67,26 +57,26 @@ class Controllers_project extends RestController
         $this->responseStatus = 200;
     }
 
-    // project/(\d+) [GET]: Returns full project description.
     public function GetProject($project_id = null)
     {
         if (!$project_id)
-            $project_id = $this->getResourceNamePart( 1 );
+            $project_id = intval($this->getResourceNamePart( 1 ));
 
-        $db_project = $this->getProjectFromDatabase( $project_id );
+        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project` WHERE `id`={$project_id}" ) or $this->throwMySQLError();
 
-        if ( !isset( $db_project ) )
+        $project = mysql_fetch_array( $query );
+
+        if ( !isset( $project ) )
             throw new Exception( 'Not Found', 404 );
 
         $this->response = array(
             "status" => 0,
-            "items" => array($this->normalizeObject( $db_project ))
+            "items" => array($this->normalizeObject( $project ))
         );
 
         $this->responseStatus = 200;
     }
 
-    // project [POST]: Create project
     public function CreateProject()
     {
         /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PROJECT_MANAGEMENT ) )
@@ -104,7 +94,6 @@ class Controllers_project extends RestController
         $this->responseStatus = 201;
     }
 
-    ## project/<id> [PUT]: Modify project
     public function EditProject()
     {
         /*if ( !$this->loggedUser->hasPermission( User::PERMISSION_PROJECT_MANAGEMENT ) )

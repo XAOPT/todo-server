@@ -106,22 +106,6 @@ abstract class RestController {
         mysql_query( $query ) or $this->throwMySQLError();
     }
 
-/*    protected function GetEditablesFromBody($editable_columns)
-    {
-        $sets = array();
-
-        foreach ($this->jsonbody as $key => $value)
-        {
-            if (in_array($key, $editable_columns))
-            {
-                $val = $this->getRequestBodyValue( $key );
-                $sets[] = "{$editable_columns[$key]}='{$val}'";
-            }
-        }
-
-        return $sets;
-    }*/
-
     protected function getResourceNamePartsCount()
     {
         return count( $this->request['resource'] );
@@ -144,7 +128,10 @@ abstract class RestController {
                 return null;
         }
 
-        return mysql_real_escape_string($val);
+        if (!is_array($val))
+            return mysql_real_escape_string($val);
+        else
+            return $val;
     }
 
     protected function getRequestParamValue( $name, $expected = true )
@@ -229,6 +216,19 @@ abstract class RestController {
                 case "bool":
                     $output[$key] = (bool)$value;
                     break;
+                case "json":
+                    if (is_array($value)) {
+                        // если на входе массив - значит надо зажать
+                        $output[$key] = json_encode($value);
+                    }
+                    else {
+                        $temp = json_decode($value, true);
+                        if (isset($temp))
+                            $output[$key] = $temp;
+                        else
+                            $output[$key] = json_encode($value);
+                    }
+                    break;
             }
         }
 
@@ -288,8 +288,11 @@ abstract class RestController {
 
             $temp = $this->getRequestBodyValue( $key, $expected );
 
-            if ($expected && !isset($temp)) {
-                throw new Exception("Bad Request: param var '{$key}' is empty", 400);
+            if ($expected) {
+                if (!isset($temp))
+                    throw new Exception("Bad Request: param var '{$key}' is null", 400);
+                else if ($schema['param'][$key] == 'string' && empty($temp))
+                    throw new Exception("Bad Request: param var '{$key}'. Required strings can't be empty", 400);
             }
 
             if (isset($temp)) {

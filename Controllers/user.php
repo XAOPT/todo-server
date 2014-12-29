@@ -14,7 +14,7 @@ class Controllers_user extends RestController
             ),
             'put' => array(
                 'user/\d+'   => 'EditUser',
-                'user/\d+/clientSettings' => 'setClientSettings'
+                'user/clientSettings' => 'setClientSettings'
             )
         );
     }
@@ -150,8 +150,6 @@ class Controllers_user extends RestController
         }
 
         $clientSettings = json_encode($clientSettings);
-
-
         mysql_query("UPDATE `todo_user` SET clientSettings='{$clientSettings}' WHERE id={$user_id}") or $this->throwMySQLError();
 
         $this->response = array(
