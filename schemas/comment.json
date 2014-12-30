@@ -10,12 +10,12 @@
         "modifiedby": "int"
     },
     "create" : {
-        "require" : ["text"],
+        "require" : ["taskid", "text"],
         "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
     },
     "edit": {
         "owner": ["*"],
         "manager": ["*"],
-        "forbidden_fields" : ["id", "created", "createdby", "modified", "modifiedby"]
+        "forbidden_fields" : ["id", "taskid", "created", "createdby", "modified", "modifiedby"]
     }
 }
