@@ -1,0 +1,17 @@
+{
+    "param": {
+        "id" : "int",
+        "taskid" : "int",
+        "text" : "string",
+        "status" : "string"
+    },
+    "create" : {
+        "require" : ["taskid", "text"],
+        "forbidden_fields" : ["id", "status"]
+    },
+    "edit": {
+        "owner": ["*"],
+        "manager": ["*"],
+        "forbidden_fields" : ["id", "taskid"]
+    }
+}

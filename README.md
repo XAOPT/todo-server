@@ -218,7 +218,6 @@ Response: {
   "status" : 0
   "items" : [
     {
-        "class" : "project",
         "id" : 1,
         "archived" : false,
         "title" : "",
@@ -389,11 +388,38 @@ _deprecated_
 
 Микротаски
 =============
-**PUT microtask/\d+**
-{
-    “state” : “open|finished|canceled”
-    “text” : “string”
+**GET microtask?taskid**  
+``` json
+Response: {
+    "id": 0,
+    "state": "open|finished",
+    "text": "string"
 }
+```
+
+**POST microtask**  
+``` json
+Request: {
+    "taskid": 0,
+    "text": "string"
+}
+```
+
+**PUT microtask/\d+**  
+``` json
+Request: {
+    "id": 0,
+    "state": "open|finished",
+    "text": ""
+}
+```
+
+**DELETE microtask/\d+**  
+``` json
+Request: {
+    "id": 0
+}
+```
 
 Комментарии
 =============
@@ -445,8 +471,8 @@ text
 
 Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
 
-**GET timesheet?userid&taskid&projid&from&count**
-Если в запросе присутствует projid (целочисленное или массив целочисленных), тогда будут выбраны только часы по этим проектам.
+**GET timesheet?userid&taskid&projid&from&count**  
+Если в запросе присутствует projid (целочисленное или массив целочисленных), тогда будут выбраны часы только по этим проектам.
 ``` json
 Response: {
   "status": 0,

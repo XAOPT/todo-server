@@ -195,6 +195,7 @@ class Controllers_task extends RestController
             $this->responseStatus = 200;
         }
 
+        mysql_query("DELETE FROM `todo_microtask` WHERE taskid='{$task_id}'");
         mysql_query("DELETE FROM `todo_task` WHERE id='{$task_id}'");
 
         ##!!!!!!!!!!!!!!!!!! TODO: timesheet clean
