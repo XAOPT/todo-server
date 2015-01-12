@@ -19,6 +19,7 @@ class Controllers_timesheet extends RestController
     {
         $userid = intval($this->getRequestParamValue('userid', false));
         $taskid = $this->getRequestParamValue('taskid', false);
+        $projid = $this->getRequestParamValue('projid', false);
         $from   = intval($this->getRequestParamValue('from', false));
         $count  = intval($this->getRequestParamValue('count', false));
 
@@ -65,11 +66,37 @@ class Controllers_timesheet extends RestController
         /* end of search condition*/
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_timesheet` WHERE {$where}") or $this->throwMySQLError();
+
+        if (!$projid) {
+            $query = mysql_query("SELECT * FROM `todo_timesheet` WHERE {$where}") or $this->throwMySQLError();
+        }
+        else {
+            if (is_array($projid)) {
+                foreach ($projid as &$p) {
+                    $p = intval($p);
+                }
+                $projid = implode(',', $projid);
+            }
+            else {
+                $projid = intval($projid);
+            }
+
+            $query = mysql_query("
+                SELECT tsh.*, t.project
+                FROM `todo_timesheet` AS tsh
+                LEFT JOIN `todo_task` AS t ON tsh.taskid=t.id
+                WHERE {$where} AND t.project IN ({$projid})
+            ") or $this->throwMySQLError();
+        }
 
         while( $obj = mysql_fetch_array( $query ) )
         {
-            $items[] = $this->normalizeObject( $obj );
+            $temp = $this->normalizeObject( $obj );
+
+            if (isset($obj['project']))
+                $temp['project'] = $obj['project'];
+
+            $items[] = $temp;
         }
 
         $this->response["items"] = $items;

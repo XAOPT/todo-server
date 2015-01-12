@@ -217,27 +217,17 @@ Request: {
 Response: {
   "status" : 0
   "items" : [
-    {}, // _project_object 
-    {} // _project_object
+    {
+        "class" : "project",
+        "id" : 1,
+        "archived" : false,
+        "title" : "",
+        "shorttitle" : "",
+        "tagcolor"   : "",
+        "created"    : "" // created_unix
+    },
+    ...
   ]
-}
-```
-
-**GET project/\d+**  
-Возвращает описание проекта  
-``` json
-Response:
-{
-    "status" : 0,
-    "item" : {
-    "class" : "project",
-    "id" : 1,
-    "archived" : false,
-    "title" : "",
-    "shorttitle" : "",
-    "tagcolor"   : "",
-    "created"    : "" // created_unix
-  }
 }
 ```
 
@@ -455,7 +445,8 @@ text
 
 Когда юзер вбивает часы отработанные по задаче, они сохраняются в отдельной таблице базы.
 
-**GET timesheet?userid&taskid&from&count**
+**GET timesheet?userid&taskid&projid&from&count**
+Если в запросе присутствует projid (целочисленное или массив целочисленных), тогда будут выбраны только часы по этим проектам.
 ``` json
 Response: {
   "status": 0,
@@ -464,6 +455,7 @@ Response: {
       "day" : 15275, 
       "userid" : 22,
       "taskid" : 22,
+      "project" : 0, // айди проекта. Присутствует только в том случае, если на входе задан параметр projid
       "worktimeSeconds" : 3600 
     }
   ]
