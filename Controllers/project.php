@@ -6,8 +6,7 @@ class Controllers_project extends RestController
     {
         return array(
             'get' => array(
-                'project'       => 'ProjectList',
-                'project/(\d+)' => 'GetProject'
+                'project'       => 'ProjectList'
             ),
             'put' => array(
                 'project/(\d+)' => 'EditProject'
@@ -28,10 +27,26 @@ class Controllers_project extends RestController
 
     public function ProjectList()
     {
-        // условия поиска
+        $id = $this->getRequestParamValue('id', false);
         $archived = intval($this->getRequestParamValue('archived', false));
 
         $where = array();
+
+        if ($id) {
+            if (is_array($id)) {
+                foreach ($id as &$i) {
+                    $i = intval($i);
+                }
+
+                $id = implode(",", $id);
+
+                $where[] = "`id` IN ({$id})";
+            }
+            else {
+                $id = intval($id);
+                $where[] = "`id`={$id}";
+            }
+        }
 
         $where[] = "`archived`={$archived}";
 
@@ -54,26 +69,6 @@ class Controllers_project extends RestController
             "status" => 0,
             "items" => $projects
         );
-        $this->responseStatus = 200;
-    }
-
-    public function GetProject($project_id = null)
-    {
-        if (!$project_id)
-            $project_id = intval($this->getResourceNamePart( 1 ));
-
-        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project` WHERE `id`={$project_id}" ) or $this->throwMySQLError();
-
-        $project = mysql_fetch_array( $query );
-
-        if ( !isset( $project ) )
-            throw new Exception( 'Not Found', 404 );
-
-        $this->response = array(
-            "status" => 0,
-            "items" => array($this->normalizeObject( $project ))
-        );
-
         $this->responseStatus = 200;
     }
 
