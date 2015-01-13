@@ -39,7 +39,7 @@ class Controllers_user extends RestController
 
         $where = array();
 
-        if ($id) {
+        if (isset($id)) {
             if (is_array($id)) {
                 foreach ($id as &$i) {
                     $i = intval($i);

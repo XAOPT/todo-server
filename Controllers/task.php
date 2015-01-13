@@ -140,6 +140,8 @@ class Controllers_task extends RestController
             $data['status'] = "open";
         }
 
+        $data['createdby'] = $this->loggedUser->getId();
+
         $this->insertArrayIntoDatabase('todo_task', $data);
         $id = mysql_insert_id();
 
