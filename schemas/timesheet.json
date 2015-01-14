@@ -7,6 +7,10 @@
         "comment" : "string"
     },
     "edit": {
-        "require" : ["userid","taskid", "worktimeSeconds", "day"]
+        "access": {
+            "owner" : ["*"]
+        },
+        "require" : ["taskid", "worktimeSeconds", "day"],
+        "forbidden": ["userid"]
     }
 }

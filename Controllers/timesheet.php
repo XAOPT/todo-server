@@ -136,7 +136,8 @@ class Controllers_timesheet extends RestController
         $controllers_task = new Controllers_task($this->request);
         $sheets = $controllers_task->checkTaskExists($data['taskid']);
 
-        // TODO: если не задан юзерайди, то приравнять его к текущему юзеру
+        $data['userid'] = $this->loggedUser->getId();
+
         if ($data['worktimeSeconds'] > 0)
         {
             if (!isset($data['comment']))
