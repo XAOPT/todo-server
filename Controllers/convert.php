@@ -130,7 +130,7 @@ class Controllers_convert extends RestController
 
     private function fillTimesheet($userid, $taskid, $binary)
     {
-        $parts = hexdec(substr($binary, 0, 2));
+        $parts = hexdec(implode('', array_reverse(str_split(substr($binary, 0, 8), 2))));
 
         for ($i = 0; $i < $parts; $i++) {
             $start = 8 + $i*18;
