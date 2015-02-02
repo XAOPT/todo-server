@@ -61,7 +61,7 @@ class Controllers_user extends RestController
         $where = implode(" AND ", $where);
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_user` WHERE {$where} ORDER BY firstname, lastname LIMIT {$from}, {$count}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `todo_user` WHERE {$where} ORDER BY lastname, firstname LIMIT {$from}, {$count}") or $this->throwMySQLError();
 
         while( $obj = mysql_fetch_array( $query ) )
         {
