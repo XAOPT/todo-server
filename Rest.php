@@ -1,32 +1,13 @@
 <?php
 /*
- * Copyright 2011 <http://voidweb.com>.
+ * Thanks to simple-rest
  * Author: Deepesh Malviya <https://github.com/deepeshmalviya>.
  *
- * Simple-REST - Lightweight PHP REST Library
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
-/**
- * Class implements RESTfulness
  */
 class Rest {
 
     private $request = array(); // Array storing request
     private $response; // Array storing response
-
-    const DEFAULT_RESPONSE_FORMAT = 'json'; // Default response format
 
     public function __construct() {
         $this->processRequest();
@@ -64,7 +45,8 @@ class Rest {
                 break;
         }
 
-        $this->request['content-type'] = $this->getResponseFormat($this->request['format']);
+        $this->request['content-type'] = 'json';
+
         if(!function_exists('trim_value')) {
             function trim_value(&$value) {
                 $value = trim($value);
@@ -250,16 +232,6 @@ class Rest {
      */
     private function getStatusMessage($status) {
         return (isset(self::$codes[$status])) ? self::$codes[$status] : self::$codes[500];
-    }
-
-    private static $formats = array('json', 'qs');
-
-    /**
-     * Function returns response format from allowed list
-     * else the default response format
-     */
-    private function getResponseFormat($format) {
-        return (in_array($format, self::$formats)) ? $format : self::DEFAULT_RESPONSE_FORMAT;
     }
 
     private static $contentTypes = array(

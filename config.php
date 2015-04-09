@@ -1,5 +1,4 @@
 <?php
-
 define('DEVMODE', 1);
 
 define('DB_NAME', 'todo-dev');
