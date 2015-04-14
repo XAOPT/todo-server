@@ -50,11 +50,9 @@ class Controllers_calendar extends RestController
 
     public function EditCalendar()
     {
-        $userid  = intval($this->getRequestBodyValue('userid', false));
-        $day     = intval($this->getRequestBodyValue('day', true));
-        $kind    = $this->getRequestBodyValue('kind', true);
+        $data = $this->GetParamsFromRequestBody('edit');
 
-        mysql_query("INSERT INTO `todo_calendar` (day, userid, kind) VALUES ({$day}, {$userid}, '{$kind}') ON DUPLICATE KEY UPDATE kind='{$kind}';") or $this->throwMySQLError();
+        mysql_query("INSERT INTO `todo_calendar` (day, userid, kind) VALUES ({$data['day']}, {$data['userid']}, '{$data['kind']}') ON DUPLICATE KEY UPDATE kind='{$data['kind']}';") or $this->throwMySQLError();
 
         $this->response = array(
             "status" => 0

@@ -3,5 +3,11 @@
         "day" : "int",
         "userid" : "int",
         "kind" : "string"
+    },
+    "edit": {
+        "owner": ["*"],
+        "manager": ["*"],
+        "require" : ["day", "kind"],
+        "forbidden_fields" : []
     }
 }
