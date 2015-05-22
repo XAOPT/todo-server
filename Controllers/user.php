@@ -19,9 +19,37 @@ class Controllers_user extends RestController
         );
     }
 
+    private function _morphTo($data = array())
+    {
+        if (isset($data['firstname'])) {
+            $data['firstName'] = $data['firstname'];
+            unset($data['firstname']);
+        }
+        if (isset($data['lastname'])) {
+            $data['lastName'] = $data['lastname'];
+            unset($data['lastname']);
+        }
+
+        return $data;
+    }
+
+    private function _morphFrom($data = array())
+    {
+        if (isset($data['firstName'])) {
+            $data['firstname'] = $data['firstName'];
+            unset($data['firstName']);
+        }
+        if (isset($data['lastName'])) {
+            $data['lastname'] = $data['lastName'];
+            unset($data['lastName']);
+        }
+
+        return $data;
+    }
+
     public function checkUserExists($user_id = 0)
     {
-        $result = mysql_query( "SELECT * FROM `todo_user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT * FROM `user` WHERE id='{$user_id}'" ) or $this->throwMySQLError();
         if (!mysql_num_rows($result))
             throw new Exception( 'Not Found', 404 );
     }
@@ -61,11 +89,11 @@ class Controllers_user extends RestController
         $where = implode(" AND ", $where);
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_user` WHERE {$where} ORDER BY lastname, firstname LIMIT {$from}, {$count}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `user` WHERE {$where} ORDER BY lastname, firstname LIMIT {$from}, {$count}") or $this->throwMySQLError();
 
         while( $obj = mysql_fetch_array( $query ) )
         {
-            $items[] = $this->normalizeObject( $obj );
+            $items[] = $this->normalizeObject( $this->_morphFrom($obj) );
         }
 
         $this->response = array(
@@ -81,11 +109,11 @@ class Controllers_user extends RestController
     {
         $data = $this->GetParamsFromRequestBody('create');
 
-        $result = mysql_query( "SELECT * FROM `todo_user` WHERE `email`='{$data['email']}'" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT * FROM `user` WHERE `email`='{$data['email']}'" ) or $this->throwMySQLError();
         if (mysql_num_rows($result))
             throw new Exception( 'This email is already registered', 302 );
 
-        $this->insertArrayIntoDatabase('todo_user', $data);
+        $this->insertArrayIntoDatabase('user', $data);
         $id = mysql_insert_id();
 
         $this->response = array(
@@ -110,7 +138,7 @@ class Controllers_user extends RestController
 
         $data = $this->GetParamsFromRequestBody('edit', $is_owner);
 
-        $this->UpdateDatabaseFromArray('todo_user', $data, "id={$user_id}");
+        $this->UpdateDatabaseFromArray('user', $data, "id={$user_id}");
 
         $this->response = array(
             "status" => 0,
@@ -124,7 +152,7 @@ class Controllers_user extends RestController
     {
         $user_id = $this->loggedUser->getId();
 
-        $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT clientSettings FROM `user` WHERE id={$user_id}") or $this->throwMySQLError();
         $temp = mysql_fetch_array($query);
 
         $clientSettings = ($temp[0])?json_decode($temp[0], true):array();
@@ -140,7 +168,7 @@ class Controllers_user extends RestController
     {
         $user_id = $this->loggedUser->getId();
 
-        $query = mysql_query("SELECT clientSettings FROM `todo_user` WHERE id={$user_id}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT clientSettings FROM `user` WHERE id={$user_id}") or $this->throwMySQLError();
         $temp = mysql_fetch_array($query);
 
         $clientSettings = json_decode($temp[0], true);
@@ -150,7 +178,7 @@ class Controllers_user extends RestController
         }
 
         $clientSettings = json_encode($clientSettings);
-        mysql_query("UPDATE `todo_user` SET clientSettings='{$clientSettings}' WHERE id={$user_id}") or $this->throwMySQLError();
+        mysql_query("UPDATE `user` SET clientSettings='{$clientSettings}' WHERE id={$user_id}") or $this->throwMySQLError();
 
         $this->response = array(
             "status" => 0

@@ -25,12 +25,12 @@ class Controllers_microtask extends RestController
         $taskid  = intval($this->getRequestParamValue('taskid', true));
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_microtask` WHERE taskid={$taskid}") or $this->throwMySQLError();
+        /*$query = mysql_query("SELECT * FROM `todo_microtask` WHERE taskid={$taskid}") or $this->throwMySQLError();
 
         while( $dbtask = mysql_fetch_array( $query ) )
         {
             $items[] = $this->normalizeObject( $dbtask );
-        }
+        }*/
 
         $this->response = array(
             "status" => 0,

@@ -22,9 +22,22 @@ class Controllers_task extends RestController
         );
     }
 
+    private function _morphFrom($data = array())
+    {
+        if (isset($data['projid'])) {
+            $data['project'] = $data['projid'];
+        }
+        if (isset($data['state'])) {
+            $status_map = array('open', 'inprogress', 'finished', 'closed', 'canceled', 'reopened');
+            $data['status'] = $status_map[$data['state']];
+        }
+
+        return $data;
+    }
+
     public function checkTaskExists($id = 0)
     {
-        $result = mysql_query( "SELECT * FROM `todo_task` WHERE id='{$id}'" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT * FROM `task` WHERE id='{$id}'" ) or $this->throwMySQLError();
         if (!mysql_num_rows($result))
             throw new Exception( 'Not Found', 404 );
     }
@@ -55,7 +68,7 @@ class Controllers_task extends RestController
         }
         if ($project) {
             $project = implode(",", $project);
-            $where[] = "`project` IN ({$project})";
+            $where[] = "`projid` IN ({$project})";
         }
         if ($title) {
             $where[] = "`title` LIKE '%{$title}%'";
@@ -66,16 +79,20 @@ class Controllers_task extends RestController
         if ($assignee) {
             if (is_array($assignee)) {
                 $assignee = implode(",", array_map('intval', $assignee));
-                $where[] = "`assignee` IN ({$assignee})";
+                $where[] = "`uid` IN ({$assignee})";
             }
             else {
                 $assignee = intval($assignee);
-                $where[] = "`assignee`={$assignee}";
+                $where[] = "`uid`={$assignee}";
             }
         }
         if ($status) {
+            $status_map = array('open', 'inprogress', 'finished', 'closed', 'canceled', 'reopened');
+            foreach ($status as &$s) {
+                $s = array_search($s, $status_map);
+            }
             $status = implode("','", $status);
-            $where[] = "`status` IN ('{$status}')";
+            $where[] = "`state` IN ('{$status}')";
         }
         if ($priority) {
             if (is_array($priority)) {
@@ -97,11 +114,11 @@ class Controllers_task extends RestController
         $where = implode(" AND ", $where);
 
         $items = array();
-        $query = mysql_query("SELECT * FROM `todo_task` WHERE {$where} ORDER BY priority DESC LIMIT {$from}, {$count}") or $this->throwMySQLError();
+        $query = mysql_query("SELECT * FROM `task` WHERE {$where} ORDER BY priority DESC LIMIT {$from}, {$count}") or $this->throwMySQLError();
 
         while( $dbtask = mysql_fetch_array( $query ) )
         {
-            $items[] = $this->normalizeObject( $dbtask );
+            $items[] = $this->normalizeObject( $this->_morphFrom($dbtask) );
         }
 
         // если запрашивается описание какой-то одной конкретной задачи и она найдена - получим список прикреплённых файлов
@@ -160,7 +177,7 @@ class Controllers_task extends RestController
 
         $data = $this->GetParamsFromRequestBody('edit');
 
-        $this->UpdateDatabaseFromArray('todo_task', $data, "id='{$task_id}'");
+        $this->UpdateDatabaseFromArray('task', $data, "id='{$task_id}'");
 
         $this->response = array(
             "status" => 0,
@@ -186,7 +203,7 @@ class Controllers_task extends RestController
        /* if ( !$this->loggedUser->hasProjectPermission( User::PERMISSION_TASK_MANAGEMENT, $task['project'] ) )
             $this->throwForbidden();*/
 
-        $query  = mysql_query("SELECT * FROM `todo_task` WHERE parentTask='{$task_id}' LIMIT 0,1");
+        $query  = mysql_query("SELECT * FROM `task` WHERE parentTask='{$task_id}' LIMIT 0,1");
 
         if ( mysql_num_rows( $query ) > 0 )
         {

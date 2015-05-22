@@ -28,7 +28,7 @@ class User
     {
         $q = "
         SELECT u.*, r.permissions
-        FROM `todo_user` AS u
+        FROM `user` AS u
         LEFT JOIN `todo_role` AS r ON (r.id = u.role)
         WHERE u.id='{$id}'
         ";

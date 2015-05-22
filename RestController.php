@@ -29,11 +29,12 @@ abstract class RestController {
         if ( !isset( $auth_token ) || !isset($userid) )
             return false;
 
-        $query = mysql_query( "SELECT * FROM `todo_session` WHERE auth_token='$auth_token' AND userid={$userid}" ) or $this->throwMySQLError();
+        $query = mysql_query( "SELECT * FROM `session` WHERE auth_token='$auth_token' AND user_id={$userid}" ) or $this->throwMySQLError();
         if ( $session = mysql_fetch_array( $query ) )
         {
             // юзер под которым вошли в систему.
-            $this->loggedUser = User::createFromDatabase( (int)$session['userid'] );
+            $this->loggedUser = User::createFromDatabase( (int)$session['user_id'] );
+
             //if ( !isset( $this->loggedUser ) || !$this->loggedUser->hasPermission( 'system.access' ) )
             if ( !isset( $this->loggedUser ))
             {
@@ -49,7 +50,8 @@ abstract class RestController {
 
     protected function dropSessionByAuthToken( $auth_token )
     {
-        mysql_query( "DELETE FROM `todo_session` WHERE auth_token='{$auth_token}'" );
+        return;
+        mysql_query( "DELETE FROM `session` WHERE auth_token='{$auth_token}'" );
     }
 
     protected function insertArrayIntoDatabase($table_name, $array = array())

@@ -111,7 +111,7 @@ class Controllers_role extends RestController
 
         mysql_query("DELETE FROM `todo_role` WHERE id={$id} AND sysrole=0") or $this->throwMySQLError();
 
-        mysql_query("UPDATE `todo_user` SET role=0 WHERE role=0") or $this->throwMySQLError();
+        mysql_query("UPDATE `user` SET role=0 WHERE role=0") or $this->throwMySQLError();
 
         $this->response = array(
             "status" => 0,

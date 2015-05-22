@@ -17,13 +17,42 @@ class Controllers_project extends RestController
         );
     }
 
+    private function _morphTo($data = array())
+    {
+        if (isset($data['shorttitle'])) {
+            $data['abc'] = $data['shorttitle'];
+            unset($data['shorttitle']);
+        }
+        if (isset($data['tagcolor'])) {
+            $data['color'] = $data['tagcolor'];
+            $data['color'] = hexdec($data['color'])*-1;
+            unset($data['tagcolor']);
+        }
+
+        return $data;
+    }
+
+    private function _morphFrom($data = array())
+    {
+        if (isset($data['abc'])) {
+            $data['shorttitle'] = $data['abc'];
+            unset($data['abc']);
+        }
+        if (isset($data['color'])) {
+            $data['tagcolor'] = $data['color'];
+            $data['tagcolor'] = dechex(abs($data['tagcolor']));
+            unset($data['color']);
+        }
+
+        return $data;
+    }
+
     public function checkProjectExists($project_id = 0)
     {
-        $result = mysql_query( "SELECT * FROM `todo_project` WHERE id='{$project_id}'" ) or $this->throwMySQLError();
+        $result = mysql_query( "SELECT * FROM `project` WHERE id='{$project_id}'" ) or $this->throwMySQLError();
         if (!mysql_num_rows($result))
             throw new Exception( 'Not Found', 404 );
     }
-
 
     public function ProjectList()
     {
@@ -59,10 +88,10 @@ class Controllers_project extends RestController
 
         $projects = array();
 
-        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `todo_project` WHERE {$where}" ) or $this->throwMySQLError();
+        $query = mysql_query( "SELECT *, UNIX_TIMESTAMP(created) AS created_unix FROM `project` WHERE {$where}" ) or $this->throwMySQLError();
         while( $db_project = mysql_fetch_array( $query ) )
         {
-            $projects[] = $this->normalizeObject( $db_project );
+            $projects[] = $this->normalizeObject( $this->_morphFrom($db_project) );
         }
 
         $this->response = array(
@@ -79,7 +108,9 @@ class Controllers_project extends RestController
 
         $data = $this->GetParamsFromRequestBody('create');
 
-        $this->insertArrayIntoDatabase('todo_project', $data);
+        $data = $this->_morphTo($data);
+
+        $this->insertArrayIntoDatabase('project', $data);
         $id = mysql_insert_id();
 
         $this->response = array(
@@ -100,7 +131,9 @@ class Controllers_project extends RestController
 
         $data = $this->GetParamsFromRequestBody('edit');
 
-        $this->UpdateDatabaseFromArray('todo_project', $data, "id='{$project_id}'");
+        $data = $this->_morphTo($data);
+
+        $this->UpdateDatabaseFromArray('project', $data, "id='{$project_id}'");
 
         $this->response = array(
             "status" => 0,
