@@ -27,8 +27,8 @@
     },
     "edit_password": {
         "access": {
-            "administer" : ["password"],
-            "owner" : ["password"]
+            "administer" : ["pwd"],
+            "owner" : ["pwd"]
         }
     }
 }

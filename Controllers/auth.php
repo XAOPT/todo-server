@@ -134,7 +134,7 @@ class Controllers_auth extends RestController
         $email    = mysql_real_escape_string($this->getRequestBodyValue('email', true));
         $password = md5($this->getRequestBodyValue('pwd', true));
 
-        $query = mysql_query( "SELECT * FROM `user` WHERE email='{$email}' AND password='{$password}'" ) or $this->throwMySQLError();
+        $query = mysql_query( "SELECT * FROM `user` WHERE email='{$email}' AND pwd='{$password}'" ) or $this->throwMySQLError();
 
         if ( $user = mysql_fetch_assoc( $query ) ) {
             $auth_token = $this->getToken($user['id']);
@@ -146,7 +146,7 @@ class Controllers_auth extends RestController
             );
         }
         else
-            throw new Exception( "SELECT * FROM `user` WHERE email='{$email}' AND password='{$password}'", 404 );
+            throw new Exception( "SELECT * FROM `user` WHERE email='{$email}' AND pwd='{$password}'", 404 );
 
         $this->responseStatus = 200;
     }
