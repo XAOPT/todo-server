@@ -71,6 +71,11 @@ class Controllers_timesheet extends RestController
 
                 if ($comments_length) {
                     $comments_pointer += 2;
+                    if (hexdec(substr($binary, $comments_pointer, 2)) < 16)
+                    {
+                        $comments_length = $comments_length + (hexdec(substr($binary, $comments_pointer, 2)) -1)*128;
+                        $comments_pointer += 2;
+                    }
                     $comment = $this->hextostring(substr($binary, $comments_pointer, $comments_length*2));
                     $comments_pointer += $comments_length*2;
                 }
@@ -79,12 +84,12 @@ class Controllers_timesheet extends RestController
                 }
 
                 $data[] = array(
-                    "day" => intval(strtotime($date)/86400)+1,
+                    "day" => intval(strtotime($date)/86400),
                     "worktimeSeconds" => $hours*3600,
                     "taskid"  => $task_id,
                     "userid"  => $userid,
                     "date"    => $date,
-                    "comment" => $comment
+                    "comment" => preg_replace('/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/', '', $comment)
                 );
             }
         }
@@ -195,7 +200,7 @@ class Controllers_timesheet extends RestController
 
             $data = array();
 
-            $query = mysql_query("SELECT id, uid, HEX(calendar) AS calendar, notes AS notes FROM `task` WHERE calendarVersion IS NOT NULL AND {$where}");
+            $query = mysql_query("SELECT id, uid, HEX(calendar) AS calendar FROM `task` WHERE calendarVersion IS NOT NULL AND {$where}");
 
             while( $row = mysql_fetch_assoc( $query ) )
             {
@@ -298,7 +303,7 @@ class Controllers_timesheet extends RestController
         $new_binary = $parts;
 
         foreach ($days as $day) {
-            $p = str_split(date("Ymd", $day['day']*86400), 2);
+            $p = str_split(date("Ymd", ($day['day']+1)*86400), 2);
 
             $new_binary .= implode('', array_reverse(str_split(sprintf("%'.04s", dechex($p[0].$p[1])).sprintf("%'.02s", dechex($p[2])).sprintf("%'.02s", dechex($p[3])), 2)));
 
