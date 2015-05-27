@@ -285,15 +285,20 @@ class Controllers_timesheet extends RestController
 
         $updated = false;
         if (!empty($days))
-        foreach ($days as &$d) {
+        foreach ($days as $key => &$d) {
             if ($d['day'] == $data['day']) {
-                $d['worktimeSeconds'] = $data['worktimeSeconds'];
-                $d['comment'] = $data['comment'];
-                $updated = true;
+                if ($data['worktimeSeconds'] > 0) {
+                    $d['worktimeSeconds'] = $data['worktimeSeconds'];
+                    $d['comment'] = $data['comment'];
+                    $updated = true;
+                }
+                else {
+                    unset($days[$key]);
+                }
             }
         }
 
-        if (!$updated) {
+        if (!$updated && $data['worktimeSeconds'] > 0) {
             $days[] = array(
                 "day" => $data['day'],
                 "worktimeSeconds" => $data['worktimeSeconds']
@@ -349,12 +354,7 @@ class Controllers_timesheet extends RestController
 
         $data['userid'] = $this->loggedUser->getId();
 
-        /*if (!isset($data['comment']))
-            $data['comment'] = '';*/
-
         $new_binary = $this->updateTimesheet($data);
-
-        //echo $new_binary; exit;
 
         mysql_query("UPDATE `task` SET calendar=UNHEX('{$new_binary}'), modified=NOW() WHERE id={$data['taskid']}") or $this->throwMySQLError();
 
