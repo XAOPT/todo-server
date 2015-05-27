@@ -31,6 +31,29 @@ class Controllers_task extends RestController
             $status_map = array('open', 'inprogress', 'finished', 'closed', 'canceled', 'reopened');
             $data['status'] = $status_map[$data['state']];
         }
+        if (isset($data['kind'])) {
+            $type_map = array('task', 'improvement', 'idea', 'testcase', 'refactoring', 'issue', 'feature', 'info', 'milestone', 'folder');
+            $data['type'] = $type_map[$data['kind']];
+        }
+
+        return $data;
+    }
+
+    private function _morphTo($data = array())
+    {
+        if (isset($data['project'])) {
+            $data['projid'] = $data['project'];
+        }
+        if (isset($data['status'])) {
+            $status_map = array('open', 'inprogress', 'finished', 'closed', 'canceled', 'reopened');
+            $data['state'] = array_search($data['status'], $type_map);
+            unset($data['status']);
+        }
+        if (isset($data['type'])) {
+            $type_map = array('task', 'improvement', 'idea', 'testcase', 'refactoring', 'issue', 'feature', 'info', 'milestone', 'folder');
+            $data['kind'] = array_search($data['type'], $type_map);
+            unset($data['type']);
+        }
 
         return $data;
     }
@@ -176,6 +199,8 @@ class Controllers_task extends RestController
         $this->checkTaskExists($task_id);
 
         $data = $this->GetParamsFromRequestBody('edit');
+
+        $data = $this->_morphTo($data);
 
         $this->UpdateDatabaseFromArray('task', $data, "id='{$task_id}'");
 
