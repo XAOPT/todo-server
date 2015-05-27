@@ -312,7 +312,13 @@ class Controllers_timesheet extends RestController
             $new_binary .= "01";
 
             if ($day['comment']) {
-                $comments_part .= sprintf("%'.02s", dechex(strlen($day['comment'])));
+                if (strlen($day['comment']) > 256) {
+                    $comments_part .= sprintf( "%'.02s", dechex(strlen($day['comment'])%128) );
+                    $comments_part .= sprintf( "%'.02s", dechex(floor(strlen($day['comment'])/128)-1) );
+                }
+                else {
+                    $comments_part .= sprintf("%'.02s", dechex(strlen($day['comment'])));
+                }
                 $comments_part .= $this->strToHex($day['comment']);
             }
             else {

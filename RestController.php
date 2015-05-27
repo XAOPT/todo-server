@@ -131,7 +131,7 @@ abstract class RestController {
         }
 
         if (!is_array($val))
-            return mysql_real_escape_string($val);
+            return str_replace("\\r\\n", "\r\n", mysql_real_escape_string($val));
         else
             return $val;
     }
