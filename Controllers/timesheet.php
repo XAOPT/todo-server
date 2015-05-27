@@ -46,7 +46,7 @@ class Controllers_timesheet extends RestController
         return 24+$parts*18+$workingday_length*8;
     }
 
-    private function parseTimesheet($binary, $task_id = 0, $userid = 0)
+    private function parseTimesheet($binary, $task_id = 0, $userid = 0, $project_id =0)
     {
         $parts_string = substr($binary, 0, 8);
         $parts = hexdec(implode('', array_reverse(str_split($parts_string, 2))));
@@ -89,6 +89,7 @@ class Controllers_timesheet extends RestController
                     "taskid"  => $task_id,
                     "userid"  => $userid,
                     "date"    => $date,
+                    "project" => $project_id,
                     "comment" => preg_replace('/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/', '', $comment)
                 );
             }
@@ -200,11 +201,11 @@ class Controllers_timesheet extends RestController
 
             $data = array();
 
-            $query = mysql_query("SELECT id, uid, HEX(calendar) AS calendar FROM `task` WHERE calendarVersion IS NOT NULL AND {$where}");
+            $query = mysql_query("SELECT id, uid, projid, HEX(calendar) AS calendar FROM `task` WHERE calendarVersion IS NOT NULL AND {$where}");
 
             while( $row = mysql_fetch_assoc( $query ) )
             {
-                $data = array_merge($this->parseTimesheet($row['calendar'], $row['id'], $row['uid']), $data);
+                $data = array_merge($this->parseTimesheet($row['calendar'], $row['id'], $row['uid'], $row['projid']), $data);
             }
 
             $this->response['from'] = $from;
@@ -355,7 +356,7 @@ class Controllers_timesheet extends RestController
 
         //echo $new_binary; exit;
 
-        mysql_query("UPDATE `task` SET calendar=UNHEX('{$new_binary}') WHERE id={$data['taskid']}") or $this->throwMySQLError();
+        mysql_query("UPDATE `task` SET calendar=UNHEX('{$new_binary}'), modified=NOW() WHERE id={$data['taskid']}") or $this->throwMySQLError();
 
         $this->response = array(
             "status" => 0
