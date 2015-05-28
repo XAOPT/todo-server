@@ -25,7 +25,7 @@ class Controllers_project extends RestController
         }
         if (isset($data['tagcolor'])) {
             $data['color'] = $data['tagcolor'];
-            $data['color'] = hexdec($data['color'])*-1;
+            $data['color'] = hexdec($data['color'])-16777216;
             unset($data['tagcolor']);
         }
 
@@ -40,7 +40,7 @@ class Controllers_project extends RestController
         }
         if (isset($data['color'])) {
             $data['tagcolor'] = $data['color'];
-            $data['tagcolor'] = dechex(abs($data['tagcolor']));
+            $data['tagcolor'] = dechex($data['tagcolor']+16777216);
             unset($data['color']);
         }
 
