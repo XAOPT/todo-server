@@ -46,7 +46,7 @@ class Controllers_task extends RestController
         }
         if (isset($data['status'])) {
             $status_map = array('open', 'inprogress', 'finished', 'closed', 'canceled', 'reopened');
-            $data['state'] = array_search($data['status'], $type_map);
+            $data['state'] = array_search($data['status'], $status_map);
             unset($data['status']);
         }
         if (isset($data['type'])) {
