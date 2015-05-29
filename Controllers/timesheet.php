@@ -324,6 +324,9 @@ class Controllers_timesheet extends RestController
                 }
                 else {
                     $comments_part .= sprintf("%'.02s", dechex(strlen($day['comment'])));
+
+                    if (strlen($day['comment']) > 127)
+                        $comments_part .= "01";
                 }
                 $comments_part .= $this->strToHex($day['comment']);
             }
